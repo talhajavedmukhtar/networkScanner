@@ -34,24 +34,54 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/ports"
-                android:text="80,9000"
+                android:text="80,9000,8008"
                 android:layout_below="@+id/cidr"
                 android:layout_centerHorizontal="true" />
 
-            <Button
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:text="Scan Hosts"
-                android:id="@+id/scan"
+                android:orientation="vertical"
                 android:layout_below="@+id/ports"
-                android:layout_centerHorizontal="true" />
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Scan Ports"
-                android:id="@+id/scanPorts"
-                android:layout_below="@+id/scan"
-                android:layout_centerHorizontal="true" />
+                android:layout_centerHorizontal="true" >
+                <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <Button
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Scan Hosts"
+                        android:id="@+id/scan"
+                        />
+                    <Button
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Scan Ports"
+                        android:id="@+id/scanPorts"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <Button
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Save"
+                        android:id="@+id/saveOutput"/>
+                    <Button
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="GH"
+                        android:id="@+id/googleHome"/>
+                </LinearLayout>
+            </LinearLayout>
+
+
         </LinearLayout>
         <ListView
             android:layout_width="match_parent"

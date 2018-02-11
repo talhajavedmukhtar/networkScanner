@@ -3,6 +3,7 @@ package talhajavedmukhtar.networkscan;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.lang.reflect.Array;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -114,23 +115,49 @@ public class HostScanner {
             if(octet == 0){
                 addresses.add(TextUtils.join(".",octetArray));
             }else{
-                //TODO
-                /*int numBits = octet*8;
-                double largest = Math.pow(2,numBits) - 1;
-
-                for(int j = 0; j < largest; j++){
-                    String toAppend = Integer.toBinaryString(j);
-                    for(int k = 0; k < octet; k++){
-                        octetArray[3-k] = "0";
-
-                    }
-                }*/
+                addresses.addAll(generateAddresses(octetArray,octet,intFromOctet));
             }
 
         }
         allHosts = addresses;
         return addresses;
 
+    }
+
+    ArrayList<String> generateAddresses(String[] octetArray, int octetNo, int intFromOctet){
+        ArrayList<String> adds = new ArrayList<>();
+
+        switch (octetNo){
+            case 1:
+                for(int i = 0; i < 256; i++){
+                    octetArray[3] = Integer.toString(i);
+                    adds.add(TextUtils.join(".",octetArray));
+                }
+                return adds;
+            case 2:
+                for(int i = 0; i < 256; i++){
+                    for(int j = 0; j < 256; j++){
+                        octetArray[2] = Integer.toString(i);
+                        octetArray[3] = Integer.toString(j);
+                        adds.add(TextUtils.join(".",octetArray));
+                    }
+                }
+                return adds;
+            case 3:
+                for(int i = 0; i < 256; i++){
+                    for(int j = 0; j < 256; j++){
+                        for(int k = 0; k < 256; k++){
+                            octetArray[1] = Integer.toString(i);
+                            octetArray[2] = Integer.toString(j);
+                            octetArray[3] = Integer.toString(k);
+                            adds.add(TextUtils.join(".",octetArray));
+                        }
+                    }
+                }
+                return adds;
+            default:
+                return adds;
+        }
     }
 
 
