@@ -12,6 +12,7 @@ import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText ip;
     private EditText cidr;
     private EditText ports;
+    private EditText timeout;
     private Button scan;
     private Button scanPorts;
     private Button saveOutput;
@@ -50,6 +52,8 @@ public class MainActivity extends AppCompatActivity {
     private HostScanner hostScanner;
     private PortScanner portScanner;
 
+    private Context context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -58,20 +62,27 @@ public class MainActivity extends AppCompatActivity {
         ip = (EditText) findViewById(R.id.ip);
         cidr = (EditText) findViewById(R.id.cidr);
         ports = (EditText) findViewById(R.id.ports);
+        timeout = (EditText) findViewById(R.id.timeout);
         scan = (Button) findViewById(R.id.scan);
         scanPorts = (Button) findViewById(R.id.scanPorts);
         saveOutput = (Button) findViewById(R.id.saveOutput);
         home = (Button) findViewById(R.id.googleHome);
         openHostsView = (ListView) findViewById(R.id.openHosts);
 
+        context = this;
+
         scan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
                 String ipAd = ip.getText().toString();
                 int cid = Integer.parseInt(cidr.getText().toString());
 
-                hostScanner = new HostScanner(ipAd,cid);
-                hostScanner.execute(500);
+                hostScanner = new HostScanner(ipAd,cid,context);
+                hostScanner.execute(Integer.parseInt(timeout.getText().toString()),2);
+                //hostScanner.executeArp();
 
                 ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(getApplicationContext(),
                         android.R.layout.simple_list_item_1, android.R.id.text1, hostScanner.openHosts){
@@ -90,15 +101,18 @@ public class MainActivity extends AppCompatActivity {
         scanPorts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+
                 String ipAd = ip.getText().toString();
                 int cid = Integer.parseInt(cidr.getText().toString());
                 String portsToScan = ports.getText().toString();
 
-                hostScanner = new HostScanner(ipAd,cid);
-                hostScanner.execute(500);
+                hostScanner = new HostScanner(ipAd,cid,getApplicationContext());
+                hostScanner.execute(500,2);
 
                 portScanner = new PortScanner(hostScanner.openHosts,portsToScan);
-                portScanner.execute(500);
+                portScanner.execute(10000);
 
                 ArrayAdapter<String> myAdapter = new ArrayAdapter<String>(getApplicationContext(),
                         android.R.layout.simple_list_item_1, android.R.id.text1, portScanner.openPortsHosts){
@@ -156,8 +170,8 @@ public class MainActivity extends AppCompatActivity {
                 int cid = Integer.parseInt(cidr.getText().toString());
                 String portsToScan = ports.getText().toString();
 
-                hostScanner = new HostScanner(ipAd,cid);
-                hostScanner.execute(500);
+                hostScanner = new HostScanner(ipAd,cid,getApplicationContext());
+                hostScanner.execute(500,2);
 
                 portScanner = new PortScanner(hostScanner.openHosts,portsToScan);
                 portScanner.execute(500);

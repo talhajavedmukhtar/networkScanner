@@ -40,7 +40,7 @@ public class PortScanner {
                     socket.close();
                     return true;
                 } catch (Exception ex) {
-                    if(ex.getMessage().contains("ECONNREFUSED")){
+                    if(!ex.getMessage().contains("ECONNREFUSED") && !ex.getMessage().contains("ENETUNREACH")){
                         Log.d("SocketError",ex.getMessage());
                         return true;
                     }
