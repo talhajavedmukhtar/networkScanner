@@ -95,6 +95,23 @@
                         android:text="GH"
                         android:id="@+id/googleHome"/>
                 </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+                    <Button
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="UPNP"
+                        android:id="@+id/upnpDiscover"/>
+                    <Button
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="MDNS"
+                        android:id="@+id/mdnsDiscover"/>
+                </LinearLayout>
             </LinearLayout>
 
 

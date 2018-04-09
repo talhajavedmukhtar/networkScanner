@@ -4,10 +4,14 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.format.Formatter;
 import android.text.format.Time;
 import android.util.Log;
 import android.view.View;
@@ -47,12 +51,26 @@ public class MainActivity extends AppCompatActivity {
     private Button scanPorts;
     private Button saveOutput;
     private Button home;
+    private Button upnpDiscover;
+    private Button mdnsDiscover;
     private ListView openHostsView;
 
     private HostScanner hostScanner;
     private PortScanner portScanner;
 
     private Context context;
+
+    public static String deviceIp;
+
+    public static Handler UIHandler;
+
+    static
+    {
+        UIHandler = new Handler(Looper.getMainLooper());
+    }
+    public static void runOnUI(Runnable runnable) {
+        UIHandler.post(runnable);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,9 +85,16 @@ public class MainActivity extends AppCompatActivity {
         scanPorts = (Button) findViewById(R.id.scanPorts);
         saveOutput = (Button) findViewById(R.id.saveOutput);
         home = (Button) findViewById(R.id.googleHome);
+        upnpDiscover = (Button) findViewById(R.id.upnpDiscover);
+        mdnsDiscover = (Button) findViewById(R.id.mdnsDiscover);
         openHostsView = (ListView) findViewById(R.id.openHosts);
 
+
         context = this;
+
+        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        deviceIp = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
+        ip.setText(deviceIp);
 
         scan.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -80,7 +105,9 @@ public class MainActivity extends AppCompatActivity {
                 String ipAd = ip.getText().toString();
                 int cid = Integer.parseInt(cidr.getText().toString());
 
-                hostScanner = new HostScanner(ipAd,cid,context);
+                int tO = Integer.parseInt(timeout.getText().toString());
+
+                /*hostScanner = new HostScanner(ipAd,cid,context);
                 hostScanner.execute(Integer.parseInt(timeout.getText().toString()),2);
                 //hostScanner.executeArp();
 
@@ -94,9 +121,13 @@ public class MainActivity extends AppCompatActivity {
                     }
                 };
 
-                openHostsView.setAdapter(myAdapter);
+                openHostsView.setAdapter(myAdapter);*/
+
+                scanHosts scanner = new scanHosts(ipAd,cid,context,openHostsView,tO);
+                //scanner.execute(200);
             }
         });
+
 
         scanPorts.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -179,6 +210,21 @@ public class MainActivity extends AppCompatActivity {
                 for(String ipPort: portScanner.openPortsHosts){
                     new GHRequest().execute("http://"+ipPort+"/setup/eureka_info?params=build_info",ipPort);
                 }
+            }
+        });
+
+        upnpDiscover.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //new UPnPDiscovery(context,openHostsView).execute();
+            }
+        });
+
+        mdnsDiscover.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //new multicastDNSDiscovery(context,openHostsView).execute();
+                //new NsdClient(context,openHostsView).execute();
             }
         });
 

@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "talhajavedmukhtar.networkscan"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -25,4 +25,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:25.3.1'
     compile 'org.pcap4j:pcap4j-core:1.+'
     compile 'org.pcap4j:pcap4j-packetfactory-static:1.+'
+    compile 'javax.jmdns:jmdns:3.4.1'
 }
