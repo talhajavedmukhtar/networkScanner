@@ -50,7 +50,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/timeout"
-                android:text="1000"
+                android:text="4000"
                 android:layout_below="@+id/ports"
                 android:layout_centerHorizontal="true"/>
 

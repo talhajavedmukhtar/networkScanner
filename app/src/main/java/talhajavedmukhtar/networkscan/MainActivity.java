@@ -21,6 +21,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,6 +59,8 @@ public class MainActivity extends AppCompatActivity {
     private HostScanner hostScanner;
     private PortScanner portScanner;
 
+    public ProgressBar progressBar;
+
     private Context context;
 
     public static String deviceIp;
@@ -89,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
         mdnsDiscover = (Button) findViewById(R.id.mdnsDiscover);
         openHostsView = (ListView) findViewById(R.id.openHosts);
 
+        progressBar = (ProgressBar) findViewById(R.id.pbLoading);
 
         context = this;
 
@@ -124,7 +128,7 @@ public class MainActivity extends AppCompatActivity {
                 openHostsView.setAdapter(myAdapter);*/
 
                 scanHosts scanner = new scanHosts(ipAd,cid,context,openHostsView,tO);
-                //scanner.execute(200);
+                scanner.execute();
             }
         });
 
@@ -316,7 +320,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
-
 
 
 }

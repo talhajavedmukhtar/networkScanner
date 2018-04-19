@@ -7,13 +7,17 @@ import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
+import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,6 +36,7 @@ public class UDPEchoDiscovery extends AsyncTask {
     int timeout;
 
     static DatagramSocket rcvSocket;
+    static DatagramSocket sendSocket;
     private final static Object syncToken = new Object();
 
     static Context mContext;
@@ -55,13 +60,112 @@ public class UDPEchoDiscovery extends AsyncTask {
         try {
             rcvSocket = new DatagramSocket(9999);
             rcvSocket.setSoTimeout(timeout);
+
+            sendSocket = new DatagramSocket();
         }catch (Exception ex){
             Log.d(TAG+".ReceiveSocketError",ex.getMessage());
         }
+
+    }
+
+    @Override
+    protected Object doInBackground(Object[] objects) {
+
+        ArrayList<String> addresses = getAddressRange(ipAddress,cidr);
+
+        try {
+            DatagramSocket socket = new DatagramSocket();
+            InetAddress address = InetAddress.getByName("10.99.27.74");
+
+            // send request
+            byte[] buf = new byte[256];
+
+            DatagramPacket packet =
+                    new DatagramPacket(buf, buf.length, address, 8070);
+            socket.send(packet);
+
+            Log.d(TAG, "Sent!!");
+
+
+            // get response
+            packet = new DatagramPacket(buf, buf.length);
+
+
+            socket.receive(packet);
+            String line = new String(packet.getData(), 0, packet.getLength());
+
+
+        } catch (SocketException e) {
+            Log.e(TAG, "Socket Error:", e);
+        } catch (IOException e) {
+            Log.e(TAG, "IO Error:", e);
+        } catch (Exception e){
+            Log.e(TAG, "Error:", e);
+        }
+
+        /*try {
+            DatagramSocket udpSocket = new DatagramSocket();
+            udpSocket.setSoTimeout(100);
+            InetAddress serverAddr = InetAddress.getByName("10.99.27.74");
+            byte[] buf = ("The String to Send").getBytes();
+            DatagramPacket packet = new DatagramPacket(buf, buf.length,serverAddr, 8070);
+            udpSocket.send(packet);
+            Log.d(TAG,"Done sending!");
+
+            byte[] buf2 = new byte[100];
+            DatagramPacket pkt = new DatagramPacket(buf2,buf2.length);
+            udpSocket.receive(pkt);
+            Log.d(TAG,"Done receiving: " + buf2.toString());
+
+            udpSocket.close();
+        } catch (SocketException e) {
+            Log.e(TAG, "Socket Error:", e);
+        } catch (IOException e) {
+            Log.e(TAG, "IO Error:", e);
+        } catch (Exception e){
+            Log.e(TAG, "Error:", e);
+        }*/
+
+
+
+        /*for(String adr: addresses){
+            byte[] msg = adr.getBytes();
+            try{
+                DatagramPacket toSend = new DatagramPacket(msg,msg.length,InetAddress.getByName(adr),7);
+                sendSocket.send(toSend);
+            }catch (Exception ex){
+                ex.printStackTrace();
+                Log.d(TAG,ex.getMessage());
+            }
+        }
+        Log.d(TAG,"Packets sent out to all addresses");
+
+        byte[] buf = new byte[2048];
+        DatagramPacket reply = new DatagramPacket(buf, buf.length);
+
+        while (true){
+            try {
+                rcvSocket.receive(reply);
+                String receivedMsg = new String(buf, 0, reply.getLength());
+                Log.d(TAG+".Received Message: ",receivedMsg);
+
+                reply.setLength(buf.length);
+            } catch (SocketTimeoutException sockEx){
+                Log.d(TAG,"Timeout was reached");
+                break;
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d(TAG,e.getMessage());
+            }
+        }
+
+        Log.d(TAG,"here2");*/
+
+        return null;
     }
 
 
-    public static Future<Boolean> hostIsActive(final ExecutorService es, final String ip, final int timeout){
+    /*public static Future<Boolean> hostIsActive(final ExecutorService es, final String ip, final int timeout){
         return es.submit(new Callable<Boolean>(){
             @Override
             public Boolean call() throws Exception {
@@ -94,7 +198,7 @@ public class UDPEchoDiscovery extends AsyncTask {
                 }
             }
         });
-    }
+    }*/
 
     public ArrayList getAddressRange(String ip, int cidr){
         //double numHosts = Math.pow(2,(32 - cidr));
@@ -183,6 +287,7 @@ public class UDPEchoDiscovery extends AsyncTask {
         }
     }
 
+    /*
     @Override
     protected Object doInBackground(Object[] objects) {
         final ExecutorService es = Executors.newFixedThreadPool(20);
@@ -215,5 +320,6 @@ public class UDPEchoDiscovery extends AsyncTask {
         }
 
         return null;
-    }
+    }*/
+
 }

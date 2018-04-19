@@ -1,11 +1,14 @@
 package talhajavedmukhtar.networkscan;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -30,6 +33,8 @@ public class PingDiscovery extends AsyncTask {
     //private ListView responseView;
     private static ArrayAdapter<String> responseAdapter;
 
+    private ProgressBar progressBar;
+
     PingDiscovery(String ipAd, int c, Context context, ListView view, ArrayList<String> resp, ArrayAdapter<String> adap){
         ipAddress = ipAd;
         cidr = c;
@@ -40,6 +45,8 @@ public class PingDiscovery extends AsyncTask {
         //responseView = view;
         responseAdapter = adap;
         //responseView.setAdapter(responseAdapter);
+
+        progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
     }
 
 
@@ -155,9 +162,18 @@ public class PingDiscovery extends AsyncTask {
 
     @Override
     protected Object doInBackground(Object[] objects) {
+        MainActivity.runOnUI(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(mContext,"Ping Discovery started",Toast.LENGTH_SHORT).show();
+            }
+        });
+
         final ExecutorService es = Executors.newFixedThreadPool(20);
 
         ArrayList<String> addresses = getAddressRange(ipAddress,cidr);
+        int max = addresses.size();
+        progressBar.setMax(max);
 
         final ArrayList<Future<Boolean>> futures = new ArrayList<>();
         for (String addr : addresses) {
@@ -165,6 +181,7 @@ public class PingDiscovery extends AsyncTask {
         }
         es.shutdown();
 
+        int  i = 0;
         for (final Future<Boolean> f : futures) {
             try{
                 if (f.get()) {
@@ -180,9 +197,18 @@ public class PingDiscovery extends AsyncTask {
                 }
             }catch (Exception e){
                 Log.d(TAG,e.getMessage());
+            }finally {
+                i += 1;
+                publishProgress(i);
             }
         }
 
         return null;
+    }
+
+    @Override
+    protected void onProgressUpdate(Object[] values) {
+        progressBar.setProgress((int)values[0]);
+        //Log.d(TAG,"New progress: "+Integer.toString((int)values[0]));
     }
 }

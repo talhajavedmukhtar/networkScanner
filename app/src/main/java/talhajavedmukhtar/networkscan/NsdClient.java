@@ -1,5 +1,6 @@
 package talhajavedmukhtar.networkscan;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
@@ -8,6 +9,8 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import org.pcap4j.packet.Dot11LinkAdaptationControl;
 
@@ -27,6 +30,8 @@ public class NsdClient extends AsyncTask{
     private NsdManager mNsdManager;
     NsdManager.DiscoveryListener mDiscoveryListener;
 
+    private ProgressBar progressBar;
+
     //To find all the available networks SERVICE_TYPE = "_services._dns-sd._udp"
     public static final String SERVICE_TYPE = "_services._dns-sd._udp";
     //public static final String SERVICE_TYPE = "_googlezone._tcp.";
@@ -43,6 +48,8 @@ public class NsdClient extends AsyncTask{
         responses = resp;
         responseView = view;
         responseAdapter = adap;
+
+        progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
     }
 
     public void initializeNsd() {
@@ -108,8 +115,18 @@ public class NsdClient extends AsyncTask{
 
     @Override
     protected Object doInBackground(Object[] objects) {
+        progressBar.setProgress(1);
+
+        MainActivity.runOnUI(new Runnable() {
+            @Override
+            public void run() {
+                Toast.makeText(mContext,"MDNS Discovery started",Toast.LENGTH_SHORT).show();
+            }
+        });
+
         initializeNsd();
         discoverServices("");
+        //stopDiscovery();
         return null;
     }
 
@@ -158,6 +175,8 @@ public class NsdClient extends AsyncTask{
 
     public void stopDiscovery() {
         mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+        progressBar.setProgress(progressBar.getMax());
+        progressBar.setProgress(0);
     }
 
     public List<NsdServiceInfo> getChosenServiceInfo() {
