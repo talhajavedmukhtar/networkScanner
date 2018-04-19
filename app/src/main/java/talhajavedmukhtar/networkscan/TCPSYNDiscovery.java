@@ -22,31 +22,31 @@ import java.util.concurrent.Future;
  * Created by Talha on 4/4/18.
  */
 
-public class TCPEchoDiscovery extends AsyncTask{
-    final static String TAG = Tags.makeTag("TCPEchoDiscovery");
+public class TCPSYNDiscovery extends AsyncTask{
+    final static String TAG = Tags.makeTag("TCPSYNDiscovery");
     String ipAddress;
     int cidr;
     int timeout;
 
     static Context mContext;
 
+    private static ArrayList<Host> discoveredHosts;
     private static ArrayList<String> responses;
-    //private ListView responseView;
     private static ArrayAdapter<String> responseAdapter;
 
     private ProgressBar progressBar;
 
-    TCPEchoDiscovery(String ipAd, int c, Context context, ListView view, ArrayList<String> resp, ArrayAdapter<String> adap, int tO){
+    TCPSYNDiscovery(String ipAd, int c, Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap, int tO){
         ipAddress = ipAd;
         cidr = c;
 
         mContext = context;
 
+        discoveredHosts = hosts;
         responses = resp;
-        //responseView = view;
         responseAdapter = adap;
-        //responseView.setAdapter(responseAdapter);
         timeout = tO;
+
 
         progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
     }
@@ -183,10 +183,12 @@ public class TCPEchoDiscovery extends AsyncTask{
         for (final Future<Boolean> f : futures) {
             try{
                 if (f.get()) {
-                    final String add = addresses.get(futures.indexOf(f)) + " : discovered through TCP Echo";
+                    final String ip = addresses.get(futures.indexOf(f));
+                    final String add = ip + " : discovered through TCP Echo";
                     MainActivity.runOnUI(new Runnable() {
                         @Override
                         public void run() {
+                            discoveredHosts.add(new Host(ip,"TCP SYN"));
                             responses.add(add);
                             responseAdapter.notifyDataSetChanged();
                         }

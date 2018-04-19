@@ -50,7 +50,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:id="@+id/timeout"
-                android:text="4000"
+                android:text="10000"
                 android:layout_below="@+id/ports"
                 android:layout_centerHorizontal="true"/>
 
@@ -88,14 +88,14 @@
                         android:layout_weight="1"
                         android:text="Save"
                         android:id="@+id/saveOutput"/>
-                    <Button
+                    <!--<Button
                         android:layout_width="fill_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="GH"
-                        android:id="@+id/googleHome"/>
+                        android:id="@+id/googleHome"/>-->
                 </LinearLayout>
-                <LinearLayout
+                <!--<LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
@@ -111,7 +111,7 @@
                         android:layout_weight="1"
                         android:text="MDNS"
                         android:id="@+id/mdnsDiscover"/>
-                </LinearLayout>
+                </LinearLayout>-->
             </LinearLayout>
 
 

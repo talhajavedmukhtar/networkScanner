@@ -29,22 +29,21 @@ public class PingDiscovery extends AsyncTask {
 
     static Context mContext;
 
+    private static ArrayList<Host> discoveredHosts;
     private static ArrayList<String> responses;
-    //private ListView responseView;
     private static ArrayAdapter<String> responseAdapter;
 
     private ProgressBar progressBar;
 
-    PingDiscovery(String ipAd, int c, Context context, ListView view, ArrayList<String> resp, ArrayAdapter<String> adap){
+    PingDiscovery(String ipAd, int c, Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap){
         ipAddress = ipAd;
         cidr = c;
 
         mContext = context;
 
+        discoveredHosts = hosts;
         responses = resp;
-        //responseView = view;
         responseAdapter = adap;
-        //responseView.setAdapter(responseAdapter);
 
         progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
     }
@@ -185,11 +184,13 @@ public class PingDiscovery extends AsyncTask {
         for (final Future<Boolean> f : futures) {
             try{
                 if (f.get()) {
-                    final String add = addresses.get(futures.indexOf(f)) + " : discovered through ICMP Ping";
+                    final String add = addresses.get(futures.indexOf(f));
+                    final String resp = add + " : discovered through ICMP Ping";
                     MainActivity.runOnUI(new Runnable() {
                         @Override
                         public void run() {
-                            responses.add(add);
+                            discoveredHosts.add(new Host(add,"ICMP Ping"));
+                            responses.add(resp);
                             responseAdapter.notifyDataSetChanged();
                         }
                     });

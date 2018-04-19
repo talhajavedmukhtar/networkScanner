@@ -1,6 +1,10 @@
 package talhajavedmukhtar.networkscan;
 
+import android.content.Context;
 import android.util.Log;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -14,13 +18,22 @@ import java.util.concurrent.Future;
  * Created by Talha on 2/8/18.
  */
 public class PortScanner {
-    private static ArrayList<String> openHosts;
+    final static String TAG = Tags.makeTag("PortScanner");
+
+    private static ArrayList<Host> discoveredHosts;
     private static ArrayList<Integer> portsToDetect;
+
+    private ListView responseView;
+    private static ArrayAdapter<String> responseAdapter;
+
+    private Context mContext;
 
     public static ArrayList<String> openPortsHosts;
 
-    PortScanner(ArrayList<String> openHosts, String ports){
-        this.openHosts = openHosts;
+    PortScanner(Context c, ArrayList<Host> discoveredHosts, String ports, ListView rView){
+        mContext = c;
+
+        this.discoveredHosts = discoveredHosts;
         portsToDetect = new ArrayList<>();
         openPortsHosts = new ArrayList<>();
 
@@ -29,9 +42,13 @@ public class PortScanner {
              portList) {
             portsToDetect.add(Integer.parseInt(port));
         }
+
+        responseView = rView;
+        responseAdapter = new ArrayAdapter<String>(mContext,android.R.layout.simple_list_item_1, android.R.id.text1, openPortsHosts);
+        responseView.setAdapter(responseAdapter);
     }
 
-    public static Future<Boolean> portIsOpen(final ExecutorService es, final String ip, final int port, final int timeout) {
+    private static Future<Boolean> portIsOpen(final ExecutorService es, final String ip, final int port, final int timeout) {
         return es.submit(new Callable<Boolean>() {
             @Override public Boolean call() {
                 try {
@@ -51,13 +68,25 @@ public class PortScanner {
         });
     }
 
+    private static ArrayList<String> getUniqueHosts(){
+        ArrayList<String> uniqueHosts = new ArrayList<>();
+        for(Host h: discoveredHosts){
+            if(!uniqueHosts.contains(h.getIpAd())){
+                uniqueHosts.add(h.getIpAd());
+                Log.d(TAG,h + " added!");
+            }
+        }
+        return uniqueHosts;
+    }
+
     public static void execute(int timeout) {
         final ExecutorService es = Executors.newFixedThreadPool(20);
+        ArrayList<String> uniqueHosts = getUniqueHosts();
 
         final ArrayList<Future<Boolean>> futures = new ArrayList<>();
-        for(String ip: openHosts) {
+        for(String h: uniqueHosts) {
             for (Integer port : portsToDetect) {
-                futures.add(portIsOpen(es, ip, port, timeout));
+                futures.add(portIsOpen(es, h, port, timeout));
             }
         }
 
@@ -66,17 +95,21 @@ public class PortScanner {
         for (final Future<Boolean> f : futures) {
             try{
                 if (f.get()) {
-                    int index = futures.indexOf(f);
+                    final int index = futures.indexOf(f);
+                    MainActivity.runOnUI(new Runnable() {
+                        @Override
+                        public void run() {
+                            openPortsHosts.add(discoveredHosts.get(index/portsToDetect.size()).getIpAd() + ":" + portsToDetect.get(index%portsToDetect.size()));
+                            responseAdapter.notifyDataSetChanged();
+                        }
+                    });
 
-                    openPortsHosts.add(openHosts.get(index/portsToDetect.size()) + ":" + portsToDetect.get(index%portsToDetect.size()));
                 }
             }catch (Exception ex){
                 Log.d("futureError",ex.getMessage());
             }
 
         }
-
-
 
     }
 }

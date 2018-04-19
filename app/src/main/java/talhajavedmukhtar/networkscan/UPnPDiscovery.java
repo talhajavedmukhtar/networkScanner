@@ -26,9 +26,9 @@ public class UPnPDiscovery extends AsyncTask {
     private String TAG = Tags.makeTag("UPnPDiscovery");
 
     private Context mContext;
+    private static ArrayList<Host> discoveredHosts;
     private static ArrayList<String> responses;
     private static ArrayAdapter<String> responseAdapter;
-    private ListView responseView;
 
     private String DEFAULT_IP = "239.255.255.250";
     private int DEFAULT_PORT = 1900;
@@ -43,12 +43,11 @@ public class UPnPDiscovery extends AsyncTask {
 
     private ProgressBar progressBar;
 
-    UPnPDiscovery(Context context, ListView view, ArrayList<String> resp, ArrayAdapter<String> adap, int tO){
+    UPnPDiscovery(Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap, int tO){
         mContext = context;
         responses = resp;
-        responseView = view;
+        discoveredHosts = hosts;
         responseAdapter = adap;
-        //responseView.setAdapter(responseAdapter);
 
         progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
         timeout = tO;
@@ -97,13 +96,15 @@ public class UPnPDiscovery extends AsyncTask {
                     String response = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
                     Log.d(TAG,response);
                     if (response.substring(0, 12).toUpperCase().equals("HTTP/1.1 200")) {
-                        final String ip = datagramPacket.getAddress().getHostAddress() + " : discovered through UPnP";
+                        final String ip = datagramPacket.getAddress().getHostAddress();
+                        final String resp = ip + " : discovered through UPnP";
                         Log.d(TAG,ip);
                         if(!responses.contains(ip)){
                             MainActivity.runOnUI(new Runnable() {
                                 @Override
                                 public void run() {
-                                    responses.add(ip);
+                                    discoveredHosts.add(new Host(ip,"UPnP"));
+                                    responses.add(resp);
                                     responseAdapter.notifyDataSetChanged();
                                 }
                             });
