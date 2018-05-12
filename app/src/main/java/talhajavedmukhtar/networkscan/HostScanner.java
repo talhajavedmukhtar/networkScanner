@@ -45,6 +45,10 @@ public class HostScanner extends AsyncTask{
 
     @Override
     protected Object doInBackground(Object[] objects) {
+        /*new UDPEchoDiscovery(ipAddress,cidr,mContext,responses,responseAdapter,timeout).execute();
+
+        return 1;*/
+
         int i = 0;
         try{
             ArrayList<AsyncTask> tasks = new ArrayList<>();
@@ -69,6 +73,7 @@ public class HostScanner extends AsyncTask{
             Log.d(TAG,ex.getMessage() + Integer.toString(i));
             return 0;
         }
+
     }
 
     @Override
