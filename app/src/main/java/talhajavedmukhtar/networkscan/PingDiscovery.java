@@ -26,6 +26,7 @@ public class PingDiscovery extends AsyncTask {
     final static String TAG = Tags.makeTag("PingDiscovery");
     String ipAddress;
     int cidr;
+    static int timeout;
 
     static Context mContext;
 
@@ -35,9 +36,10 @@ public class PingDiscovery extends AsyncTask {
 
     private ProgressBar progressBar;
 
-    PingDiscovery(String ipAd, int c, Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap){
+    PingDiscovery(String ipAd, int c, Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap, int tO){
         ipAddress = ipAd;
         cidr = c;
+        timeout = tO;
 
         mContext = context;
 
@@ -55,7 +57,7 @@ public class PingDiscovery extends AsyncTask {
             @Override
             public Boolean call() throws Exception {
                 try {
-                    Process  mIpAddrProcess = runtime.exec("/system/bin/ping -c 1 "+ip);
+                    Process  mIpAddrProcess = runtime.exec("/system/bin/ping -c 1 -W " + (timeout/1000) + " " +ip);
                     int mExitValue = mIpAddrProcess.waitFor();
 
                     Log.d(TAG,"Exit Message: " + Integer.toString(mExitValue));

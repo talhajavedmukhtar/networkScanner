@@ -55,7 +55,7 @@ public class HostScanner extends AsyncTask{
             tasks.add(new TCPSYNDiscovery(ipAddress,cidr,mContext,discoveredHosts,responses,responseAdapter,timeout));
             tasks.add(new MDNSDiscovery(mContext,discoveredHosts,responses,responseAdapter));
             tasks.add(new UPnPDiscovery(mContext,discoveredHosts,responses,responseAdapter,timeout));
-            tasks.add(new PingDiscovery(ipAddress,cidr,mContext,discoveredHosts,responses,responseAdapter));
+            tasks.add(new PingDiscovery(ipAddress,cidr,mContext,discoveredHosts,responses,responseAdapter,timeout));
 
 
             for(AsyncTask aTask: tasks){
