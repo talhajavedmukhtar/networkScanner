@@ -6,6 +6,7 @@ import android.net.nsd.NsdManager;
 import android.net.nsd.NsdServiceInfo;
 import android.nfc.Tag;
 import android.os.AsyncTask;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -126,6 +127,7 @@ public class MDNSDiscovery extends AsyncTask{
 
         initializeNsd();
         discoverServices("");
+
         //stopDiscovery();
         return null;
     }

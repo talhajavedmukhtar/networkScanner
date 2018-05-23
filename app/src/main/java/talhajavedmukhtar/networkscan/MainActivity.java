@@ -64,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
         scanPorts = (Button) findViewById(R.id.scanPorts);
         scanPorts.setEnabled(false);
         saveOutput = (Button) findViewById(R.id.saveOutput);
+        saveOutput.setEnabled(false);
         openHostsView = (ListView) findViewById(R.id.openHosts);
 
         progressBar = (ProgressBar) findViewById(R.id.pbLoading);
@@ -77,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
         scan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                scanPorts.setEnabled(false);
+                saveOutput.setEnabled(false);
                 InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
 
@@ -111,7 +114,10 @@ public class MainActivity extends AppCompatActivity {
         saveOutput.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                int tO = Integer.parseInt(timeout.getText().toString());
+
                 String message = " ";
+                message += "Running with a timeout of " + Integer.toString(tO/1000) + " \n";
                 if(hostScanner != null){
                     message += "Open Hosts Data: \n";
                     for(Host h: hostScanner.discoveredHosts){
@@ -132,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(getApplicationContext(),"Nothing to save!",Toast.LENGTH_SHORT).show();
                 }else{
                     Intent intent = new Intent(Intent.ACTION_SENDTO);
-                    intent.setData(Uri.parse("mailto:")); // only email apps should handle this
+                    intent.setData(Uri.parse("mailto:tjaved.bscs15seecs@seecs.edu.pk")); // only email apps should handle this
                     intent.putExtra(Intent.EXTRA_TEXT,message);
                     intent.putExtra(Intent.EXTRA_SUBJECT, "NetworkScanner Data");
                     if (intent.resolveActivity(getPackageManager()) != null) {

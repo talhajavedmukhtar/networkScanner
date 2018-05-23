@@ -184,7 +184,7 @@ public class TCPSYNDiscovery extends AsyncTask{
             try{
                 if (f.get()) {
                     final String ip = addresses.get(futures.indexOf(f));
-                    final String add = ip + " : discovered through TCP Echo";
+                    final String add = ip + " : discovered through TCP SYN";
                     MainActivity.runOnUI(new Runnable() {
                         @Override
                         public void run() {
