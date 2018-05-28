@@ -29,7 +29,8 @@ public class MDNSDiscovery extends AsyncTask{
     private static ArrayAdapter<String> responseAdapter;
 
     private NsdManager mNsdManager;
-    NsdManager.DiscoveryListener mDiscoveryListener;
+
+    private ArrayList<NsdManager.DiscoveryListener> discoveryListeners;
 
     private ProgressBar progressBar;
 
@@ -40,7 +41,6 @@ public class MDNSDiscovery extends AsyncTask{
 
     String mServiceName = "NSD";
 
-    private static ArrayList<NsdServiceInfo> ServicesAvailable = new ArrayList<>();
 
     public MDNSDiscovery(Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap) {
         mContext = context;
@@ -53,69 +53,9 @@ public class MDNSDiscovery extends AsyncTask{
         progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
     }
 
-    public void initializeNsd() {
-        initializeDiscoveryListener();
-    }
-
-    public void initializeDiscoveryListener() {
-        mDiscoveryListener = new NsdManager.DiscoveryListener() {
-
-            @Override
-            public void onDiscoveryStarted(String regType) {
-                Log.d(TAG, "Service discovery started " + regType);
-            }
-
-            @Override
-            public void onServiceFound(NsdServiceInfo service) {
-                Log.d(TAG, "Service discovery success " + service);
-                //AVAILABLE_NETWORKS.add(service);
-
-                if(service.getServiceType().contains("local.")){
-                    String newServiceType = service.getServiceName() + "." + service.getServiceType().substring(0,service.getServiceType().length()-6);
-                    Log.d(TAG, "New Service Type:  " + newServiceType);
-                    discoverServices(newServiceType);
-                    mNsdManager.resolveService(service, new initializeResolveListener());
-                }
-
-                if (!service.getServiceType().equals(SERVICE_TYPE)) {
-                    Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
-                } else if (service.getServiceName().equals(mServiceName)) {
-                    Log.d(TAG, "Same Machine: " + mServiceName);
-                } else if (service.getServiceName().contains(mServiceName)) {
-                    Log.d(TAG, "Resolving Services: " + service);
-                    mNsdManager.resolveService(service, new initializeResolveListener());
-                }
-            }
-
-            @Override
-            public void onServiceLost(NsdServiceInfo service) {
-                Log.e(TAG, "service lost" + service);
-                if (ServicesAvailable.equals(service)) {
-                    ServicesAvailable = null;
-                }
-            }
-
-            @Override
-            public void onDiscoveryStopped(String serviceType) {
-                Log.i(TAG, "Discovery stopped: " + serviceType);
-            }
-
-            @Override
-            public void onStartDiscoveryFailed(String serviceType, int errorCode) {
-                Log.e(TAG, "Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
-            }
-
-            @Override
-            public void onStopDiscoveryFailed(String serviceType, int errorCode) {
-                Log.e(TAG, "Discovery failed: Error code:" + errorCode);
-                mNsdManager.stopServiceDiscovery(this);
-            }
-        };
-    }
-
     @Override
     protected Object doInBackground(Object[] objects) {
+        int timeout = 10000;
         progressBar.setProgress(1);
 
         MainActivity.runOnUI(new Runnable() {
@@ -125,12 +65,21 @@ public class MDNSDiscovery extends AsyncTask{
             }
         });
 
-        initializeNsd();
+        //initiate discovery listeners
         discoverServices("");
 
-        //stopDiscovery();
+        //wait for specified timeout
+        try {
+            Thread.sleep(timeout);
+        } catch (InterruptedException e) {
+            Log.e(TAG,e.getMessage());
+        }
+
+        //remove all discovery listeners
+        stopDiscovery();
         return null;
     }
+
 
     public class initializeResolveListener implements NsdManager.ResolveListener {
 
@@ -177,71 +126,112 @@ public class MDNSDiscovery extends AsyncTask{
     }
 
     public void stopDiscovery() {
-        mNsdManager.stopServiceDiscovery(mDiscoveryListener);
+        Log.d(TAG,"Stopping Service Discovery" );
+        for (NsdManager.DiscoveryListener dListener: discoveryListeners) {
+            mNsdManager.stopServiceDiscovery(dListener);
+            Log.d(TAG,"# of discovery listeners: " + discoveryListeners.size() );
+        }
         progressBar.setProgress(progressBar.getMax());
         progressBar.setProgress(0);
     }
 
-    public List<NsdServiceInfo> getChosenServiceInfo() {
-        return ServicesAvailable;
-    }
-
     public void discoverServices(String serviceType) {
         if(serviceType == ""){
-            mNsdManager.discoverServices(
-                    SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, mDiscoveryListener);
+            NsdManager.DiscoveryListener rootDiscoveryListener = new NsdManager.DiscoveryListener() {
+                @Override
+                public void onDiscoveryStarted(String regType) {
+                    Log.d(TAG, "Service discovery started " + regType);
+                }
+
+                //this is the important overridden function
+                @Override
+                public void onServiceFound(NsdServiceInfo service) {
+                    Log.d(TAG, "Service discovery success " + service);
+                    //AVAILABLE_NETWORKS.add(service);
+
+                    if(service.getServiceType().contains("local.")){
+                        String newServiceType = service.getServiceName() + "." + service.getServiceType().substring(0,service.getServiceType().length()-6);
+                        Log.d(TAG, "New Service Type:  " + newServiceType);
+                        discoverServices(newServiceType);
+                        mNsdManager.resolveService(service, new initializeResolveListener());
+                    }
+
+                }
+
+                @Override
+                public void onServiceLost(NsdServiceInfo service) {
+                    Log.e(TAG, "service lost" + service);
+                }
+
+                @Override
+                public void onDiscoveryStopped(String serviceType) {
+                    Log.i(TAG, "Discovery stopped: " + serviceType);
+                }
+
+                @Override
+                public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+                    Log.e(TAG, "Discovery failed: Error code:" + errorCode);
+                    mNsdManager.stopServiceDiscovery(this);
+                }
+
+                @Override
+                public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+                    Log.e(TAG, "Discovery failed: Error code:" + errorCode);
+                    mNsdManager.stopServiceDiscovery(this);
+                }
+            };
+            discoveryListeners.add(rootDiscoveryListener);
+            mNsdManager.discoverServices(SERVICE_TYPE, NsdManager.PROTOCOL_DNS_SD, rootDiscoveryListener);
         }else{
-            mNsdManager.discoverServices(
-                    serviceType, NsdManager.PROTOCOL_DNS_SD, new NsdManager.DiscoveryListener() {
+            NsdManager.DiscoveryListener discoveryListener = new NsdManager.DiscoveryListener() {
 
-                        @Override
-                        public void onDiscoveryStarted(String regType) {
-                            Log.d(TAG, "Service discovery started " + regType);
-                        }
+                @Override
+                public void onDiscoveryStarted(String regType) {
+                    Log.d(TAG, "Service discovery started " + regType);
+                }
 
-                        @Override
-                        public void onServiceFound(NsdServiceInfo service) {
-                            Log.d(TAG, "Service discovery success " + service);
-                            //AVAILABLE_NETWORKS.add(service);
+                @Override
+                public void onServiceFound(NsdServiceInfo service) {
+                    Log.d(TAG, "Service discovery success " + service);
+                    //AVAILABLE_NETWORKS.add(service);
 
-                            mNsdManager.resolveService(service, new initializeResolveListener());
+                    mNsdManager.resolveService(service, new initializeResolveListener());
 
-                            if (!service.getServiceType().equals(SERVICE_TYPE)) {
-                                Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
-                            } else if (service.getServiceName().equals(mServiceName)) {
-                                Log.d(TAG, "Same Machine: " + mServiceName);
-                            } else if (service.getServiceName().contains(mServiceName)) {
-                                Log.d(TAG, "Resolving Services: " + service);
-                                mNsdManager.resolveService(service, new initializeResolveListener());
-                            }
-                        }
+                    if (!service.getServiceType().equals(SERVICE_TYPE)) {
+                        Log.d(TAG, "Unknown Service Type: " + service.getServiceType());
+                    } else if (service.getServiceName().equals(mServiceName)) {
+                        Log.d(TAG, "Same Machine: " + mServiceName);
+                    } else if (service.getServiceName().contains(mServiceName)) {
+                        Log.d(TAG, "Resolving Services: " + service);
+                        mNsdManager.resolveService(service, new initializeResolveListener());
+                    }
+                }
 
-                        @Override
-                        public void onServiceLost(NsdServiceInfo service) {
-                            Log.e(TAG, "service lost" + service);
-                            if (ServicesAvailable.equals(service)) {
-                                ServicesAvailable = null;
-                            }
-                        }
+                @Override
+                public void onServiceLost(NsdServiceInfo service) {
+                    Log.e(TAG, "service lost" + service);
+                }
 
-                        @Override
-                        public void onDiscoveryStopped(String serviceType) {
-                            Log.i(TAG, "Discovery stopped: " + serviceType);
-                        }
+                @Override
+                public void onDiscoveryStopped(String serviceType) {
+                    Log.i(TAG, "Discovery stopped: " + serviceType);
+                }
 
-                        @Override
-                        public void onStartDiscoveryFailed(String serviceType, int errorCode) {
-                            Log.e(TAG, "Discovery failed: Error code:" + errorCode);
-                            mNsdManager.stopServiceDiscovery(this);
-                        }
+                @Override
+                public void onStartDiscoveryFailed(String serviceType, int errorCode) {
+                    Log.e(TAG, "Discovery failed: Error code:" + errorCode);
+                    mNsdManager.stopServiceDiscovery(this);
+                }
 
-                        @Override
-                        public void onStopDiscoveryFailed(String serviceType, int errorCode) {
-                            Log.e(TAG, "Discovery failed: Error code:" + errorCode);
-                            mNsdManager.stopServiceDiscovery(this);
-                        }
-                    });
-
+                @Override
+                public void onStopDiscoveryFailed(String serviceType, int errorCode) {
+                    Log.e(TAG, "Discovery failed: Error code:" + errorCode);
+                    mNsdManager.stopServiceDiscovery(this);
+                }
+            };
+            discoveryListeners.add(discoveryListener);
+            mNsdManager.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
+            Log.d(TAG,"# of discovery listeners: " + discoveryListeners.size() );
         }
 
     }
