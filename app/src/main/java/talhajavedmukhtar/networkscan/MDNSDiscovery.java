@@ -41,8 +41,10 @@ public class MDNSDiscovery extends AsyncTask{
 
     String mServiceName = "NSD";
 
+    int timeout;
 
-    public MDNSDiscovery(Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap) {
+
+    public MDNSDiscovery(Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap, int tO) {
         mContext = context;
         mNsdManager = (NsdManager) context.getSystemService(Context.NSD_SERVICE);
 
@@ -50,12 +52,15 @@ public class MDNSDiscovery extends AsyncTask{
         responses = resp;
         responseAdapter = adap;
 
+        discoveryListeners = new ArrayList<>();
+
         progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
+
+        timeout = tO;
     }
 
     @Override
     protected Object doInBackground(Object[] objects) {
-        int timeout = 10000;
         progressBar.setProgress(1);
 
         MainActivity.runOnUI(new Runnable() {
@@ -69,14 +74,11 @@ public class MDNSDiscovery extends AsyncTask{
         discoverServices("");
 
         //wait for specified timeout
-        try {
-            Thread.sleep(timeout);
-        } catch (InterruptedException e) {
-            Log.e(TAG,e.getMessage());
-        }
+        waitTillTimeout(timeout,5);
 
         //remove all discovery listeners
         stopDiscovery();
+        Log.d(TAG,"About to get done");
         return null;
     }
 
@@ -129,7 +131,7 @@ public class MDNSDiscovery extends AsyncTask{
         Log.d(TAG,"Stopping Service Discovery" );
         for (NsdManager.DiscoveryListener dListener: discoveryListeners) {
             mNsdManager.stopServiceDiscovery(dListener);
-            Log.d(TAG,"# of discovery listeners: " + discoveryListeners.size() );
+            Log.d(TAG,"A discovery listener removed." );
         }
         progressBar.setProgress(progressBar.getMax());
         progressBar.setProgress(0);
@@ -232,6 +234,39 @@ public class MDNSDiscovery extends AsyncTask{
             discoveryListeners.add(discoveryListener);
             mNsdManager.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, discoveryListener);
             Log.d(TAG,"# of discovery listeners: " + discoveryListeners.size() );
+        }
+
+    }
+
+    public void waitTillTimeout(final int timeout, final int intervals){
+        //intervals is the number of times progress bar is "progressed"
+        Thread waitingThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int progressStatus;
+                int max = 100;
+                progressBar.setMax(max);
+                Log.d(TAG,"progress bar max " + progressBar.getMax());
+
+                for(int i = 1; i <= intervals; i++){
+                    progressStatus = (i*max)/intervals;
+                    Log.d(TAG,"new progress status: " + progressStatus);
+
+                    try {
+                        Thread.sleep(timeout/intervals);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+
+                    progressBar.setProgress(progressStatus);
+                }
+            }
+        });
+        waitingThread.start();
+        try{
+            waitingThread.join();
+        }catch (Exception ex){
+            Log.d(TAG,ex.getMessage());
         }
 
     }
