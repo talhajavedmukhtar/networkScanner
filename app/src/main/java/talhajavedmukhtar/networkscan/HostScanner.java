@@ -45,28 +45,24 @@ public class HostScanner extends AsyncTask{
 
     @Override
     protected Object doInBackground(Object[] objects) {
-        /*new UDPEchoDiscovery(ipAddress,cidr,mContext,responses,responseAdapter,timeout).execute();
-
-        return 1;*/
-
         int i = 0;
         try{
             ArrayList<AsyncTask> tasks = new ArrayList<>();
-            //tasks.add(new TCPSYNDiscovery(ipAddress,cidr,mContext,discoveredHosts,responses,responseAdapter,timeout));
-            //tasks.add(new MDNSDiscovery(mContext,discoveredHosts,responses,responseAdapter,timeout));
+            tasks.add(new TCPSYNDiscovery(ipAddress,cidr,mContext,discoveredHosts,responses,responseAdapter,timeout));
+            tasks.add(new MDNSDiscovery(mContext,discoveredHosts,responses,responseAdapter,timeout));
             tasks.add(new UPnPDiscovery(mContext,discoveredHosts,responses,responseAdapter,timeout));
-            //tasks.add(new PingDiscovery(ipAddress,cidr,mContext,discoveredHosts,responses,responseAdapter,timeout));
+            tasks.add(new PingDiscovery(ipAddress,cidr,mContext,discoveredHosts,responses,responseAdapter,timeout));
 
-
+            //start parallel execution
             for(AsyncTask aTask: tasks){
                 aTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                //aTask.execute();
+            }
+
+            //wait for each task to execute
+            for(AsyncTask aTask: tasks){
                 while(aTask.getStatus() != android.os.AsyncTask.Status.FINISHED){
-                    //Log.d(TAG,"Waiting for " + Integer.toString(i));
-                    //wait until this task is done
+                    //wait until this is done
                 }
-                i += 1;
-                Log.d(TAG,"Done");
             }
             return 1;
         }catch (Exception ex){
