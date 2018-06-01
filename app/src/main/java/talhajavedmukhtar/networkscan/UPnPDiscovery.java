@@ -91,7 +91,7 @@ public class UPnPDiscovery extends AsyncTask {
                 //ArrayList<String> responses = new ArrayList<>();
                 while (curTime - time < timeout) {
                     Log.d(TAG,"Waiting for UPnP");
-                    
+
                     int progressStatus;
                     int max = 100;
                     progressBar.setMax(max);
