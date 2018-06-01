@@ -89,8 +89,15 @@ public class UPnPDiscovery extends AsyncTask {
                 //responses.clear();
                 //Toast.makeText(mContext,"Socket for UPnP Discovery Opened",Toast.LENGTH_SHORT).show();
                 //ArrayList<String> responses = new ArrayList<>();
-                while (curTime - time < 1000) {
+                while (curTime - time < timeout) {
                     Log.d(TAG,"Waiting for UPnP");
+                    
+                    int progressStatus;
+                    int max = 100;
+                    progressBar.setMax(max);
+                    progressStatus = (((int)(curTime - time))/timeout)*100;
+                    progressBar.setProgress(progressStatus);
+
                     DatagramPacket datagramPacket = new DatagramPacket(new byte[1024], 1024);
                     socket.receive(datagramPacket);
                     String response = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
@@ -110,13 +117,14 @@ public class UPnPDiscovery extends AsyncTask {
                             });
                         }
                     }
+
                     curTime = System.currentTimeMillis();
                     Log.d(TAG,"Difference is: " + Long.toString(curTime-time));
                 }
 
             } catch (final Exception e) {
                 e.printStackTrace();
-                Log.d(TAG,e.toString());
+                Log.d(TAG,e.toString() + " : " + e.getMessage());
             } finally {
                 if (socket != null) {
                     socket.close();
