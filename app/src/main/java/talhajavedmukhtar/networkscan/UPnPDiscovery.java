@@ -63,6 +63,8 @@ public class UPnPDiscovery extends AsyncTask {
             }
         });
 
+        ArrayList<String> discoveredIps = new ArrayList<>();
+
         Log.d(TAG,"Waiting for UPnP");
         WifiManager wifi = (WifiManager) mContext.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         if(wifi != null) {
@@ -105,8 +107,8 @@ public class UPnPDiscovery extends AsyncTask {
                     if (response.substring(0, 12).toUpperCase().equals("HTTP/1.1 200")) {
                         final String ip = datagramPacket.getAddress().getHostAddress();
                         final String resp = ip + " : discovered through UPnP";
-                        Log.d(TAG,ip);
-                        if(!responses.contains(ip)){
+                        if(!discoveredIps.contains(ip)){
+                            discoveredIps.add(ip);
                             MainActivity.runOnUI(new Runnable() {
                                 @Override
                                 public void run() {
@@ -116,6 +118,7 @@ public class UPnPDiscovery extends AsyncTask {
                                 }
                             });
                         }
+                        Log.d(TAG,ip);
                     }
 
                     curTime = System.currentTimeMillis();
