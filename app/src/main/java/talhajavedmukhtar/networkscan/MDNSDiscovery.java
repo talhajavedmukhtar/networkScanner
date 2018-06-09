@@ -105,7 +105,8 @@ public class MDNSDiscovery extends AsyncTask{
         @Override
         public void onServiceResolved(NsdServiceInfo serviceInfo) {
             Log.e(TAG, "Resolve Succeeded. " + serviceInfo);
-            final String host = serviceInfo.getHost().toString();
+            final String host = (serviceInfo.getHost().toString()).substring(1);
+            Log.d(TAG+" host found:",host);
 
             MainActivity.runOnUI(new Runnable() {
                 @Override
