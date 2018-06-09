@@ -80,6 +80,7 @@ public class HostScanner extends AsyncTask{
         if((int)o == 1){
             ((Activity) mContext).findViewById(R.id.scanPorts).setEnabled(true);
             ((Activity) mContext).findViewById(R.id.saveOutput).setEnabled(true);
+            ((Activity) mContext).findViewById(R.id.viewSummary).setEnabled(true);
         }
     }
 }

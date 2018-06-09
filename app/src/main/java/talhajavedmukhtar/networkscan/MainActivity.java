@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.format.Formatter;
@@ -20,6 +21,8 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity {
     private EditText ip;
     private EditText cidr;
@@ -28,9 +31,9 @@ public class MainActivity extends AppCompatActivity {
     private Button scan;
     private Button scanPorts;
     private Button saveOutput;
+    private Button viewSummary;
 
     private ListView openHostsView;
-
 
     private HostScanner hostScanner;
     private PortScanner portScanner;
@@ -65,6 +68,8 @@ public class MainActivity extends AppCompatActivity {
         scanPorts.setEnabled(false);
         saveOutput = (Button) findViewById(R.id.saveOutput);
         saveOutput.setEnabled(false);
+        viewSummary = (Button) findViewById(R.id.viewSummary);
+        viewSummary.setEnabled(false);
         openHostsView = (ListView) findViewById(R.id.openHosts);
 
         progressBar = (ProgressBar) findViewById(R.id.pbLoading);
@@ -146,6 +151,22 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
 
+            }
+        });
+
+        viewSummary.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ArrayList<String> uniqueIps = new ArrayList<>();
+                for(Host h: hostScanner.discoveredHosts){
+                    String ip = h.getIpAd();
+                    if(!uniqueIps.contains(ip)){
+                        uniqueIps.add(ip);
+                    }
+                }
+                Intent intent = new Intent(getBaseContext(), SummaryActivity.class);
+                intent.putExtra("addressList",uniqueIps);
+                startActivity(intent);
             }
         });
 

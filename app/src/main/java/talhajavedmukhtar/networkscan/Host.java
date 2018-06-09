@@ -1,10 +1,13 @@
 package talhajavedmukhtar.networkscan;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by Talha on 4/19/18.
  */
 
-public class Host {
+public class Host{
     private String ipAd;
     private String discoveredThrough;
 
@@ -32,4 +35,6 @@ public class Host {
     public void setDiscoveredThrough(String discoveredThrough) {
         this.discoveredThrough = discoveredThrough;
     }
+
+
 }
