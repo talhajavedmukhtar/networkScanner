@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
                 int tO = Integer.parseInt(timeout.getText().toString());
 
-                hostScanner = new HostScanner(ipAd,cid,context,openHostsView,tO);
+                hostScanner = new HostScanner(ipAd,cid,context,openHostsView,tO*1000 /*from seconds to ms*/);
                 hostScanner.execute();
             }
         });
@@ -117,7 +117,7 @@ public class MainActivity extends AppCompatActivity {
                 int tO = Integer.parseInt(timeout.getText().toString());
 
                 String message = " ";
-                message += "Running with a timeout of " + Integer.toString(tO/1000) + " \n";
+                message += "Running with a timeout of " + Integer.toString(tO) + " \n";
                 if(hostScanner != null){
                     message += "Open Hosts Data: \n";
                     for(Host h: hostScanner.discoveredHosts){
