@@ -85,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View view) {
                 scanPorts.setEnabled(false);
                 saveOutput.setEnabled(false);
+                viewSummary.setEnabled(false);
                 InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
 
