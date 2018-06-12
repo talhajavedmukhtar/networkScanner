@@ -2,6 +2,7 @@ package talhajavedmukhtar.networkscan;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.DhcpInfo;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
@@ -10,6 +11,7 @@ import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.format.Formatter;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
@@ -22,8 +24,12 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
+    final String TAG = Tags.makeTag("Main");
+
     private EditText ip;
     private EditText cidr;
     private EditText ports;
@@ -41,6 +47,9 @@ public class MainActivity extends AppCompatActivity {
     public ProgressBar progressBar;
 
     private Context context;
+
+    private WifiManager wifiManager;
+    private DhcpInfo dhcpInfo;
 
     public static String deviceIp;
 
@@ -76,9 +85,19 @@ public class MainActivity extends AppCompatActivity {
 
         context = this;
 
-        WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        deviceIp = Formatter.formatIpAddress(wm.getConnectionInfo().getIpAddress());
-        ip.setText(deviceIp);
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+
+        try{
+            dhcpInfo = wifiManager.getDhcpInfo();
+            ip.setText(getGateway());
+            cidr.setText(Integer.toString(getCIDR()));
+        }catch (Exception ex){
+            Log.d(TAG + " Error",ex.getMessage());
+            deviceIp = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
+            ip.setText(deviceIp);
+            cidr.setText("24");
+        }
+
 
         scan.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -170,6 +189,52 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+    }
+
+
+
+    private int getCIDR() {
+        int i = dhcpInfo.netmask;
+        ArrayList<String> octets = new ArrayList<>();
+        octets.add(Integer.toBinaryString(i & 0xFF));
+
+        for(int j = 1; j < 4; j++){
+            octets.add(Integer.toBinaryString((i >>>= 8) & 0xFF));
+        }
+
+        int CIDR = 0;
+
+        for (String octet: octets){
+            if (octet.equals("11111111")){
+                CIDR += 8;
+            }else{
+                int numOfOnes = 0;
+
+                for(int j = 0; j < 8; j++){
+                    if(octet.charAt(j) == '1'){
+                        numOfOnes += 1;
+                    }else {
+                        break;
+                    }
+                }
+                Log.d(TAG,octet + " : " + numOfOnes);
+                CIDR += numOfOnes;
+                break;
+            }
+            Log.d(TAG,octet);
+        }
+
+        Log.d(TAG + " Size", Integer.toString(CIDR));
+        return CIDR;
+    }
+
+    private String getGateway(){
+        int gatewayInt = dhcpInfo.gateway;
+        return (gatewayInt & 0xFF) + "." +
+                ((gatewayInt >>>= 8) & 0xFF) + "." +
+                ((gatewayInt >>>= 8) & 0xFF) + "." +
+                ((gatewayInt >>>= 8) & 0xFF);
 
     }
 
