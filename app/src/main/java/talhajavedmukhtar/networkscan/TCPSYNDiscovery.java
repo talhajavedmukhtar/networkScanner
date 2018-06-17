@@ -10,6 +10,8 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -67,6 +69,15 @@ public class TCPSYNDiscovery extends AsyncTask{
                         return true;
                     }
                     return false;
+                }  finally {
+                    BufferedReader bufferedReader = new BufferedReader(new FileReader("/proc/net/arp"));
+
+                    String line;
+                    int noOfLines = 0;
+                    while ((line = bufferedReader.readLine()) != null) {
+                        noOfLines += 1;
+                    }
+                    Log.d(TAG+".TCPUpdate", "NoOfLines:" + noOfLines);
                 }
             }
         });
