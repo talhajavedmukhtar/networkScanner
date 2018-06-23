@@ -1,8 +1,10 @@
 package talhajavedmukhtar.networkscan;
 
+import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -17,6 +19,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 public class SummaryActivity extends AppCompatActivity {
     final String TAG = Tags.makeTag("Summary");
@@ -42,11 +45,7 @@ public class SummaryActivity extends AppCompatActivity {
 
         uniqueIps = (ArrayList<String>) getIntent().getExtras().getStringArrayList("addressList");
         int totalDevices = uniqueIps.size();
-
-        message = totalDevices + " device(s) discovered: ";
-
-        messageTV = (TextView) findViewById(R.id.totalDevices);
-        messageTV.setText(message);
+        int additionalDevices = 0;
 
         uniqueIpsLV = (ListView) findViewById(R.id.deviceAddresses);
         ArrayAdapter adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, android.R.id.text1, devices);
@@ -77,10 +76,21 @@ public class SummaryActivity extends AppCompatActivity {
                         if (!mac.equals("00:00:00:00:00:00")){
                             Log.d(TAG,">> " + ip + " : " + mac);
                             String vendor = macToVendorMap.findVendor(mac);
+
+                            String deviceInfo = "";
+                            if(!uniqueIps.contains(ip)){
+                                deviceInfo += "(A) ";
+                                additionalDevices += 1;
+                            }else{
+                                deviceInfo += "(S) ";
+                            }
+
                             if(vendor != null){
-                                devices.add(ip + ": " + mac + ": " + vendor);
+                                deviceInfo += ip + ": " + mac + ": " + vendor;
+                                devices.add(deviceInfo);
                             }else {
-                                devices.add(ip + ": " + mac);
+                                deviceInfo += ip + ": " + mac;
+                                devices.add(deviceInfo);
                             }
                             adapter.notifyDataSetChanged();
 
@@ -93,8 +103,29 @@ public class SummaryActivity extends AppCompatActivity {
             }
 
             for(String ip: uniqueIps){
-                devices.add(ip);
-                adapter.notifyDataSetChanged();
+                //Check if self
+                try{
+                    WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+                    String selfIp = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
+                    if(ip.equals(selfIp)){
+                        String mac = wifiManager.getConnectionInfo().getMacAddress();
+                        String vendor = macToVendorMap.findVendor(mac);
+                        String deviceInfo = "(S) ";
+                        if(vendor != null){
+                            deviceInfo += ip + ": " + mac + ": " + vendor;
+                            devices.add(deviceInfo);
+                        }else {
+                            deviceInfo += ip + ": " + mac;
+                            devices.add(deviceInfo);
+                        }
+                    }else{
+                        devices.add("(S) " + ip);
+                        adapter.notifyDataSetChanged();
+                    }
+
+                }catch (Exception ex){
+                    Log.d(TAG,ex.getMessage());
+                }
             }
 
         } catch (FileNotFoundException e) {
@@ -109,5 +140,12 @@ public class SummaryActivity extends AppCompatActivity {
             }
         }
 
+        message = totalDevices + " device(s) discovered through scans (S) \n "
+                    + additionalDevices + " additional device(s) discovered through ARP Table (A) ";
+
+        messageTV = (TextView) findViewById(R.id.totalDevices);
+        messageTV.setText(message);
     }
+
+
 }

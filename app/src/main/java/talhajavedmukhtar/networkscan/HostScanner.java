@@ -49,7 +49,7 @@ public class HostScanner extends AsyncTask{
         try{
             ArrayList<AsyncTask> tasks = new ArrayList<>();
             tasks.add(new TCPSYNDiscovery(ipAddress,cidr,mContext,discoveredHosts,responses,responseAdapter,timeout));
-            tasks.add(new MDNSDiscovery(mContext,discoveredHosts,responses,responseAdapter,timeout));
+            //tasks.add(new MDNSDiscovery(mContext,discoveredHosts,responses,responseAdapter,timeout));
             tasks.add(new UPnPDiscovery(mContext,discoveredHosts,responses,responseAdapter,timeout));
             tasks.add(new PingDiscovery(ipAddress,cidr,mContext,discoveredHosts,responses,responseAdapter,timeout));
 
@@ -78,7 +78,7 @@ public class HostScanner extends AsyncTask{
 
         //if successfully completed host discovery
         if((int)o == 1){
-            ((Activity) mContext).findViewById(R.id.scanPorts).setEnabled(true);
+            //((Activity) mContext).findViewById(R.id.scanPorts).setEnabled(true);
             ((Activity) mContext).findViewById(R.id.saveOutput).setEnabled(true);
             ((Activity) mContext).findViewById(R.id.viewSummary).setEnabled(true);
         }

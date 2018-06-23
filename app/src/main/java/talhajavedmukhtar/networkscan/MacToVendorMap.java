@@ -2,6 +2,7 @@ package talhajavedmukhtar.networkscan;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.os.AsyncTask;
 import android.util.Log;
 
 import java.io.BufferedReader;
@@ -20,7 +21,11 @@ public class MacToVendorMap {
     private HashMap<String,String> medium;
     private HashMap<String,String> large;
 
-    MacToVendorMap(Context c){
+    MacToVendorMap(final Context c){
+        initializeMap(c);
+    }
+
+    private void initializeMap(Context c){
         //store entries from the small chunks file
         small = new HashMap<>();
 
@@ -31,7 +36,19 @@ public class MacToVendorMap {
             while ((line = bufferedReader.readLine()) != null) {
                 String[] fields = line.split(",");
                 if(fields[0].equals("Registry")) continue;
-                small.put(fields[1],fields[2]);
+
+                String MAC = fields[1];
+
+                int i = 2;
+                String manufacturer = fields[i];
+                if(fields[i].startsWith("\"")){
+                    while(!fields[i].endsWith("\"")){
+                        i += 1;
+                        manufacturer += "," + fields[i];
+                    }
+                }
+
+                small.put(MAC,manufacturer);
             }
         }catch (Exception ex){
             Log.d(TAG,ex.getMessage());
@@ -53,7 +70,17 @@ public class MacToVendorMap {
             while ((line = bufferedReader.readLine()) != null) {
                 String[] fields = line.split(",");
                 if(fields[0].equals("Registry")) continue;
-                medium.put(fields[1],fields[2]);
+                String MAC = fields[1];
+
+                int i = 2;
+                String manufacturer = fields[i];
+                if(fields[i].startsWith("\"")){
+                    while(!fields[i].endsWith("\"")){
+                        i += 1;
+                        manufacturer += "," + fields[i];
+                    }
+                }
+                medium.put(MAC,manufacturer);
             }
         }catch (Exception ex){
             Log.d(TAG,ex.getMessage());
@@ -76,7 +103,17 @@ public class MacToVendorMap {
             while ((line = bufferedReader.readLine()) != null) {
                 String[] fields = line.split(",");
                 if(fields[0].equals("Registry")) continue;
-                large.put(fields[1],fields[2]);
+                String MAC = fields[1];
+
+                int i = 2;
+                String manufacturer = fields[i];
+                if(fields[i].startsWith("\"")){
+                    while(!fields[i].endsWith("\"")){
+                        i += 1;
+                        manufacturer += "," + fields[i];
+                    }
+                }
+                large.put(MAC,manufacturer);
             }
         }catch (Exception ex){
             Log.d(TAG,ex.getMessage());

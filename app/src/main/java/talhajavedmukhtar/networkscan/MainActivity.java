@@ -70,11 +70,11 @@ public class MainActivity extends AppCompatActivity {
 
         ip = (EditText) findViewById(R.id.ip);
         cidr = (EditText) findViewById(R.id.cidr);
-        ports = (EditText) findViewById(R.id.ports);
+        //ports = (EditText) findViewById(R.id.ports);
         timeout = (EditText) findViewById(R.id.timeout);
         scan = (Button) findViewById(R.id.scan);
-        scanPorts = (Button) findViewById(R.id.scanPorts);
-        scanPorts.setEnabled(false);
+        //scanPorts = (Button) findViewById(R.id.scanPorts);
+        //scanPorts.setEnabled(false);
         saveOutput = (Button) findViewById(R.id.saveOutput);
         saveOutput.setEnabled(false);
         viewSummary = (Button) findViewById(R.id.viewSummary);
@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         scan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                scanPorts.setEnabled(false);
+                //scanPorts.setEnabled(false);
                 saveOutput.setEnabled(false);
                 viewSummary.setEnabled(false);
                 InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -119,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        scanPorts.setOnClickListener(new View.OnClickListener() {
+        /*scanPorts.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -134,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
                 portScanner.execute(10000);
 
             }
-        });
+        });*/
 
         saveOutput.setOnClickListener(new View.OnClickListener() {
             @Override
