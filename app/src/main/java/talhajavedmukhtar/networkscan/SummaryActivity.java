@@ -1,5 +1,7 @@
 package talhajavedmukhtar.networkscan;
 
+import android.content.Intent;
+import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -33,7 +35,7 @@ public class SummaryActivity extends AppCompatActivity {
     private TextView messageTV;
     private ListView uniqueIpsLV;
     private Button closeButton;
-
+    private Button saveButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +44,8 @@ public class SummaryActivity extends AppCompatActivity {
 
         macToVendorMap = new MacToVendorMap(this);
         devices = new ArrayList<>();
+
+        message = "";
 
         uniqueIps = (ArrayList<String>) getIntent().getExtras().getStringArrayList("addressList");
         int totalDevices = uniqueIps.size();
@@ -52,11 +56,32 @@ public class SummaryActivity extends AppCompatActivity {
         uniqueIpsLV.setAdapter(adapter);
 
         closeButton = (Button) findViewById(R.id.closeButton);
-
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();
+            }
+        });
+
+        saveButton = (Button) findViewById(R.id.saveButton);
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String data = " ";
+                data += "------------------\n";
+                for(String deviceInfo: devices){
+                    data += deviceInfo + "\n";
+                }
+                data += "------------------\n";
+
+
+                Intent intent = new Intent(Intent.ACTION_SENDTO);
+                intent.setData(Uri.parse("mailto:tjaved.bscs15seecs@seecs.edu.pk")); // only email apps should handle this
+                intent.putExtra(Intent.EXTRA_TEXT,data);
+                intent.putExtra(Intent.EXTRA_SUBJECT, "NetworkScanner Data");
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    startActivity(intent);
+                }
             }
         });
 
@@ -86,10 +111,10 @@ public class SummaryActivity extends AppCompatActivity {
                             }
 
                             if(vendor != null){
-                                deviceInfo += ip + ": " + mac + ": " + vendor;
+                                deviceInfo += ip + " || " + mac + " || " + vendor;
                                 devices.add(deviceInfo);
                             }else {
-                                deviceInfo += ip + ": " + mac;
+                                deviceInfo += ip + " || " + mac;
                                 devices.add(deviceInfo);
                             }
                             adapter.notifyDataSetChanged();
@@ -112,10 +137,10 @@ public class SummaryActivity extends AppCompatActivity {
                         String vendor = macToVendorMap.findVendor(mac);
                         String deviceInfo = "(S) ";
                         if(vendor != null){
-                            deviceInfo += ip + ": " + mac + ": " + vendor;
+                            deviceInfo += ip + " || " + mac + " || " + vendor;
                             devices.add(deviceInfo);
                         }else {
-                            deviceInfo += ip + ": " + mac;
+                            deviceInfo += ip + " || " + mac;
                             devices.add(deviceInfo);
                         }
                     }else{
@@ -140,7 +165,7 @@ public class SummaryActivity extends AppCompatActivity {
             }
         }
 
-        message = totalDevices + " device(s) discovered through scans (S) \n "
+        message += totalDevices + " device(s) discovered through scans (S) \n "
                     + additionalDevices + " additional device(s) discovered through ARP Table (A) ";
 
         messageTV = (TextView) findViewById(R.id.totalDevices);
