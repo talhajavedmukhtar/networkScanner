@@ -22,15 +22,7 @@ public class MacToVendorMap {
     private HashMap<String,String> large;
 
     MacToVendorMap(final Context c){
-        (new AsyncTask<Void,Void,Boolean>(){
-
-            @Override
-            protected Boolean doInBackground(Void... voids) {
-                initializeMap(c);
-                return true;
-            }
-        }).execute();
-
+        initializeMap(c);
     }
 
     private void initializeMap(Context c){
@@ -144,10 +136,12 @@ public class MacToVendorMap {
 
         if(vendor == null){
             vendor = medium.get(MACportion + pieces[3].charAt(0));
+            Log.d(TAG,"Looked in med");
         }
-        
+
         if(vendor == null){
             vendor = small.get(MACportion + pieces[3] + pieces[4].charAt(0));
+            Log.d(TAG,"Looked in small");
         }
 
         return vendor;
