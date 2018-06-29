@@ -22,7 +22,15 @@ public class MacToVendorMap {
     private HashMap<String,String> large;
 
     MacToVendorMap(final Context c){
-        initializeMap(c);
+        (new AsyncTask<Void,Void,Boolean>(){
+
+            @Override
+            protected Boolean doInBackground(Void... voids) {
+                initializeMap(c);
+                return true;
+            }
+        }).execute();
+
     }
 
     private void initializeMap(Context c){
@@ -131,6 +139,7 @@ public class MacToVendorMap {
     public String findVendor(String MACAddress){
         String[] pieces = MACAddress.toUpperCase().split(":");
         String MACportion = pieces[0]+pieces[1]+pieces[2];
+        Log.d(TAG,MACportion);
         String vendor = large.get(MACportion);
 
         if(vendor == null){

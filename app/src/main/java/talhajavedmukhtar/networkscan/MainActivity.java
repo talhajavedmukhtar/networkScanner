@@ -90,7 +90,12 @@ public class MainActivity extends AppCompatActivity {
         try{
             dhcpInfo = wifiManager.getDhcpInfo();
             ip.setText(getGateway());
-            cidr.setText(Integer.toString(getCIDR()));
+            String CIDR = Integer.toString(getCIDR());
+            if (CIDR.equals("0")){
+                cidr.setText("24");
+            }else {
+                cidr.setText(CIDR);
+            }
         }catch (Exception ex){
             Log.d(TAG + " Error",ex.getMessage());
             deviceIp = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
@@ -196,6 +201,7 @@ public class MainActivity extends AppCompatActivity {
 
     private int getCIDR() {
         int i = dhcpInfo.netmask;
+
         ArrayList<String> octets = new ArrayList<>();
         octets.add(Integer.toBinaryString(i & 0xFF));
 
@@ -204,6 +210,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         int CIDR = 0;
+
 
         for (String octet: octets){
             if (octet.equals("11111111")){
