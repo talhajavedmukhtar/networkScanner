@@ -38,6 +38,8 @@ public class TCPSYNDiscovery extends AsyncTask{
 
     private ProgressBar progressBar;
 
+    static final ArrayList<Future<Boolean>> futures = new ArrayList<>();
+
     TCPSYNDiscovery(String ipAd, int c, Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap, int tO){
         ipAddress = ipAd;
         cidr = c;
@@ -54,30 +56,43 @@ public class TCPSYNDiscovery extends AsyncTask{
     }
 
 
-    public static Future<Boolean> hostIsActive(final ExecutorService es, final String ip , final int timeout){
+    public static Future<Boolean> hostIsActive(final ExecutorService es, final String ip , final int timeout, final int index){
         return es.submit(new Callable<Boolean>(){
             @Override
             public Boolean call() throws Exception {
+                Socket socket = new Socket();
                 try {
-                    Socket socket = new Socket();
                     socket.connect(new InetSocketAddress(ip, 7), timeout);
                     socket.close();
                     return true;
                 } catch (Exception ex) {
-                    Log.d(TAG+".SocketError",ex.getMessage());
+                    Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip);
                     if(ex.getMessage().contains("ECONNREFUSED")){
                         return true;
                     }
+                    //if timeout was reached, queue this one again
+                    if(ex.getMessage().contains("ENOBUFS")){
+                        futures.add(index,hostIsActive(es,ip,timeout,index));
+                    }
                     return false;
                 }  finally {
-                    BufferedReader bufferedReader = new BufferedReader(new FileReader("/proc/net/arp"));
+                    if(!socket.isClosed()){
+                        Log.d(TAG+".OpenSocketCase",ip);
+                        socket.close();
+                        if(socket.isClosed()){
+                            Log.d(TAG+".OpenSocketCase","closed");
+                        }else{
+                            Log.d(TAG+".OpenSocketCase","stubborn");
+                        }
+                    }
+                    /*BufferedReader bufferedReader = new BufferedReader(new FileReader("/proc/net/arp"));
 
                     String line;
                     int noOfLines = 0;
                     while ((line = bufferedReader.readLine()) != null) {
                         noOfLines += 1;
                     }
-                    Log.d(TAG+".TCPUpdate", "NoOfLines:" + noOfLines);
+                    Log.d(TAG+".TCPUpdate", "NoOfLines:" + noOfLines);*/
                 }
             }
         });
@@ -178,15 +193,16 @@ public class TCPSYNDiscovery extends AsyncTask{
                 Toast.makeText(mContext,"TCP Discovery started",Toast.LENGTH_SHORT).show();
             }
         });
-        final ExecutorService es = Executors.newFixedThreadPool(20);
+        final ExecutorService es = Executors.newFixedThreadPool(256);
 
         ArrayList<String> addresses = getAddressRange(ipAddress,cidr);
         int max = addresses.size();
         progressBar.setMax(max);
 
-        final ArrayList<Future<Boolean>> futures = new ArrayList<>();
+        int index = 0;
         for (String addr : addresses) {
-            futures.add(hostIsActive(es, addr, timeout));
+            futures.add(hostIsActive(es, addr, timeout,index));
+            index += 1;
         }
         es.shutdown();
 

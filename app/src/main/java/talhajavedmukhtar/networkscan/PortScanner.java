@@ -80,7 +80,7 @@ public class PortScanner {
     }
 
     public static void execute(int timeout) {
-        final ExecutorService es = Executors.newFixedThreadPool(20);
+        final ExecutorService es = Executors.newFixedThreadPool(256);
         ArrayList<String> uniqueHosts = getUniqueHosts();
 
         final ArrayList<Future<Boolean>> futures = new ArrayList<>();
