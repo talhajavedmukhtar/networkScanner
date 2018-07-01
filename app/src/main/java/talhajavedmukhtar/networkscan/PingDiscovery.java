@@ -170,11 +170,11 @@ public class PingDiscovery extends AsyncTask {
             }
         });
 
-        final ExecutorService es = Executors.newFixedThreadPool(20);
-
         ArrayList<String> addresses = getAddressRange(ipAddress,cidr);
         int max = addresses.size();
         progressBar.setMax(max);
+
+        final ExecutorService es = Executors.newFixedThreadPool(max);
 
         final ArrayList<Future<Boolean>> futures = new ArrayList<>();
         for (String addr : addresses) {
