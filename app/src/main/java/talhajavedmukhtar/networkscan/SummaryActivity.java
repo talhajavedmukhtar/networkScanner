@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.format.Formatter;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -36,6 +37,9 @@ public class SummaryActivity extends AppCompatActivity {
     private ListView uniqueIpsLV;
     private Button closeButton;
     private Button saveButton;
+    private Button portScanButton;
+
+    public static ArrayList<Host> discoveredHosts;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +48,7 @@ public class SummaryActivity extends AppCompatActivity {
 
         macToVendorMap = new MacToVendorMap(this);
         devices = new ArrayList<>();
+        discoveredHosts = new ArrayList<>();
 
         message = "";
 
@@ -52,7 +57,7 @@ public class SummaryActivity extends AppCompatActivity {
         int additionalDevices = 0;
 
         uniqueIpsLV = (ListView) findViewById(R.id.deviceAddresses);
-        ArrayAdapter adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, android.R.id.text1, devices);
+        ArrayAdapter adapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_multiple_choice, android.R.id.text1, devices);
         uniqueIpsLV.setAdapter(adapter);
 
         closeButton = (Button) findViewById(R.id.closeButton);
@@ -113,9 +118,11 @@ public class SummaryActivity extends AppCompatActivity {
                             if(vendor != null){
                                 deviceInfo += ip + " || " + mac + " || " + vendor;
                                 devices.add(deviceInfo);
+                                discoveredHosts.add(new Host(ip,mac,vendor));
                             }else {
                                 deviceInfo += ip + " || " + mac;
                                 devices.add(deviceInfo);
+                                discoveredHosts.add(new Host(ip,mac,null));
                             }
                             adapter.notifyDataSetChanged();
 
@@ -139,12 +146,15 @@ public class SummaryActivity extends AppCompatActivity {
                         if(vendor != null){
                             deviceInfo += ip + " || " + mac + " || " + vendor;
                             devices.add(deviceInfo);
+                            discoveredHosts.add(new Host(ip,mac,vendor));
                         }else {
                             deviceInfo += ip + " || " + mac;
                             devices.add(deviceInfo);
+                            discoveredHosts.add(new Host(ip,mac,null));
                         }
                     }else{
                         devices.add("(S) " + ip);
+                        discoveredHosts.add(new Host(ip,null,null));
                         adapter.notifyDataSetChanged();
                     }
 
@@ -164,6 +174,33 @@ public class SummaryActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
+        //initially all items are checked
+        uniqueIpsLV.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
+        for(int i = 0; i < devices.size(); i++){
+            uniqueIpsLV.setItemChecked(i,true);
+        }
+
+        portScanButton = (Button) findViewById(R.id.portScanButton);
+        portScanButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SparseBooleanArray arr = uniqueIpsLV.getCheckedItemPositions();
+
+                ArrayList<String> selectedIps = new ArrayList<>();
+
+                //pass list of ips to next activity
+                for(int i = 0; i < arr.size(); i++){
+                    if(arr.valueAt(i)){
+                        selectedIps.add(discoveredHosts.get(i).getIpAd());
+                    }
+                }
+
+                Intent intent = new Intent(getBaseContext(), PortScanActivity.class);
+                intent.putExtra("selectedIps",selectedIps);
+                startActivity(intent);
+            }
+        });
 
         message += totalDevices + " device(s) discovered through scans (S) \n "
                     + additionalDevices + " additional device(s) discovered through ARP Table (A) ";

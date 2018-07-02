@@ -141,7 +141,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });*/
 
-        saveOutput.setOnClickListener(new View.OnClickListener() {
+        /*saveOutput.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 int tO = Integer.parseInt(timeout.getText().toString());
@@ -177,7 +177,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             }
-        });
+        });*/
 
         viewSummary.setOnClickListener(new View.OnClickListener() {
             @Override

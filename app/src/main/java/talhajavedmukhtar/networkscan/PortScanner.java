@@ -1,10 +1,13 @@
 package talhajavedmukhtar.networkscan;
 
+import android.app.Activity;
 import android.content.Context;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -17,99 +20,128 @@ import java.util.concurrent.Future;
 /**
  * Created by Talha on 2/8/18.
  */
-public class PortScanner {
+public class PortScanner extends AsyncTask{
     final static String TAG = Tags.makeTag("PortScanner");
 
-    private static ArrayList<Host> discoveredHosts;
-    private static ArrayList<Integer> portsToDetect;
+    private ProgressBar progressBar;
+    private ArrayList<String> selectedIps;
 
-    private ListView responseView;
-    private static ArrayAdapter<String> responseAdapter;
+    private ArrayList<String> openPortMessages;
+    private ArrayAdapter<String> openPortsAdapter;
 
-    private Context mContext;
+    private int maxPort;
 
-    public static ArrayList<String> openPortsHosts;
+    private TextView devicesDoneView;
 
-    PortScanner(Context c, ArrayList<Host> discoveredHosts, String ports, ListView rView){
-        mContext = c;
+    String devicesDoneMessage;
 
-        this.discoveredHosts = discoveredHosts;
-        portsToDetect = new ArrayList<>();
-        openPortsHosts = new ArrayList<>();
+    private PortScanActivity portScanActivity;
 
-        String[] portList = ports.split(",");
-        for (String port:
-             portList) {
-            portsToDetect.add(Integer.parseInt(port));
-        }
+    PortScanner(Context context, ArrayList<String> sIps, ArrayList<String> oPM, ArrayAdapter<String> adap, int max){
+        progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.psLoading);
+        devicesDoneView = (TextView) ((Activity)context).findViewById(R.id.devicesDoneView);
+        selectedIps = sIps;
 
-        responseView = rView;
-        responseAdapter = new ArrayAdapter<String>(mContext,android.R.layout.simple_list_item_1, android.R.id.text1, openPortsHosts);
-        responseView.setAdapter(responseAdapter);
+        portScanActivity = (PortScanActivity) context;
+
+        openPortMessages = oPM;
+        openPortsAdapter = adap;
+
+        maxPort = max;
     }
 
-    private static Future<Boolean> portIsOpen(final ExecutorService es, final String ip, final int port, final int timeout) {
-        return es.submit(new Callable<Boolean>() {
-            @Override public Boolean call() {
+
+    private static Future<Boolean> portIsOpen(final ExecutorService es, final String ip , final int port){
+        return es.submit(new Callable<Boolean>(){
+            @Override
+            public Boolean call() throws Exception {
+                Socket socket = new Socket();
                 try {
-                    Socket socket = new Socket();
-                    socket.connect(new InetSocketAddress(ip, port), timeout);
+                    socket.connect(new InetSocketAddress(ip, port), 1000);
                     socket.close();
                     return true;
                 } catch (Exception ex) {
-                    if(!ex.getMessage().contains("ECONNREFUSED") && !ex.getMessage().contains("ENETUNREACH")){
-                        Log.d("SocketError",ex.getMessage());
+                    Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip);
+                    /*if(ex.getMessage().contains("ECONNREFUSED")){
                         return true;
-                    }
-                    Log.d("SocketError",ex.getMessage());
+                    }*/
                     return false;
                 }
             }
         });
     }
 
-    private static ArrayList<String> getUniqueHosts(){
-        ArrayList<String> uniqueHosts = new ArrayList<>();
-        for(Host h: discoveredHosts){
-            if(!uniqueHosts.contains(h.getIpAd())){
-                uniqueHosts.add(h.getIpAd());
-                Log.d(TAG,h + " added!");
-            }
-        }
-        return uniqueHosts;
-    }
+    private void scanPorts(String ip, int max){
+        final ExecutorService es = Executors.newFixedThreadPool(1000);
+        ArrayList<Future<Boolean>> futures = new ArrayList<>();
 
-    public static void execute(int timeout) {
-        final ExecutorService es = Executors.newFixedThreadPool(256);
-        ArrayList<String> uniqueHosts = getUniqueHosts();
+        progressBar.setProgress(0);
 
-        final ArrayList<Future<Boolean>> futures = new ArrayList<>();
-        for(String h: uniqueHosts) {
-            for (Integer port : portsToDetect) {
-                futures.add(portIsOpen(es, h, port, timeout));
-            }
+
+        for (int i = 0; i < max; i++) {
+            futures.add(portIsOpen(es, ip, i));
         }
 
         es.shutdown();
 
+        int i = 0;
         for (final Future<Boolean> f : futures) {
             try{
                 if (f.get()) {
-                    final int index = futures.indexOf(f);
-                    MainActivity.runOnUI(new Runnable() {
+                    final int index = i;
+                    final String ipAd = ip;
+                    PortScanActivity.runOnUI(new Runnable() {
                         @Override
                         public void run() {
-                            openPortsHosts.add(discoveredHosts.get(index/portsToDetect.size()).getIpAd() + ":" + portsToDetect.get(index%portsToDetect.size()));
-                            responseAdapter.notifyDataSetChanged();
+                            updateHostInfo(ipAd,index);
                         }
                     });
-
                 }
-            }catch (Exception ex){
-                Log.d("futureError",ex.getMessage());
+            }catch (Exception e){
+                Log.d(TAG,e.getMessage());
+            }finally {
+                i += 1;
+                progressBar.setProgress(i);
             }
+        }
+    }
 
+    private void updateHostInfo(String ip, int openPort){
+        for(Host h: SummaryActivity.discoveredHosts){
+            if(h.getIpAd().equals(ip)){
+                h.addOpenPort(openPort);
+            }
         }
 
+        String oldMessage = openPortMessages.get(selectedIps.indexOf(ip));
+        String[] parts = oldMessage.split(" ");
+        int openPortsUpdated = Integer.parseInt(parts[parts.length-1]) + 1;
+        String updatedMessage = ip + " Open Ports Found: " + openPortsUpdated;
+        openPortMessages.set(selectedIps.indexOf(ip),updatedMessage);
+        openPortsAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    protected Object doInBackground(Object[] objects) {
+        int i;
+        for(i = 0; i < selectedIps.size(); i++){
+            publishProgress(i);
+            scanPorts(selectedIps.get(i),maxPort);
+        }
+        publishProgress(i);
+
+        return null;
+    }
+
+    @Override
+    protected void onProgressUpdate(Object[] values) {
+        super.onProgressUpdate(values);
+        portScanActivity.updateDevicesDone((int)values[0]);
+    }
+
+    @Override
+    protected void onPostExecute(Object o) {
+        super.onPostExecute(o);
+        portScanActivity.enableSaveButton();
     }
 }
