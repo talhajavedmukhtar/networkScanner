@@ -3,29 +3,21 @@ package talhajavedmukhtar.networkscan;
 import android.content.Context;
 import android.content.Intent;
 import android.net.DhcpInfo;
-import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity {
     final String TAG = Tags.makeTag("Main");
@@ -62,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
     public static void runOnUI(Runnable runnable) {
         UIHandler.post(runnable);
     }
+
+    MyApp applicationData;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -195,6 +189,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        applicationData = (MyApp) getApplication();
+        applicationData.initTask.execute();
     }
 
 

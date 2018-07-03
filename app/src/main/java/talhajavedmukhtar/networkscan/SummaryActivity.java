@@ -6,14 +6,12 @@ import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.format.Formatter;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -22,8 +20,6 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.regex.Pattern;
 
 public class SummaryActivity extends AppCompatActivity implements PScanParametersDialog.ParametersDialogListener{
     final String TAG = Tags.makeTag("Summary");
@@ -51,7 +47,6 @@ public class SummaryActivity extends AppCompatActivity implements PScanParameter
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_summary);
 
-        macToVendorMap = new MacToVendorMap(this);
         devices = new ArrayList<>();
         discoveredHosts = new ArrayList<>();
 
@@ -96,6 +91,15 @@ public class SummaryActivity extends AppCompatActivity implements PScanParameter
         });
 
         BufferedReader bufferedReader = null;
+
+        MyApp app = (MyApp) getApplication();
+
+        //wait until map is ready
+        while (!app.isMapReady()){
+
+        }
+
+        macToVendorMap = app.getMap();
 
         try {
             bufferedReader = new BufferedReader(new FileReader("/proc/net/arp"));
