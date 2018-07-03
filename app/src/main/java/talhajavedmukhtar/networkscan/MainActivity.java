@@ -24,11 +24,8 @@ public class MainActivity extends AppCompatActivity {
 
     private EditText ip;
     private EditText cidr;
-    private EditText ports;
     private EditText timeout;
     private Button scan;
-    private Button scanPorts;
-    private Button saveOutput;
     private Button viewSummary;
 
     private ListView openHostsView;
@@ -64,13 +61,8 @@ public class MainActivity extends AppCompatActivity {
 
         ip = (EditText) findViewById(R.id.ip);
         cidr = (EditText) findViewById(R.id.cidr);
-        //ports = (EditText) findViewById(R.id.ports);
         timeout = (EditText) findViewById(R.id.timeout);
         scan = (Button) findViewById(R.id.scan);
-        //scanPorts = (Button) findViewById(R.id.scanPorts);
-        //scanPorts.setEnabled(false);
-        saveOutput = (Button) findViewById(R.id.saveOutput);
-        saveOutput.setEnabled(false);
         viewSummary = (Button) findViewById(R.id.viewSummary);
         viewSummary.setEnabled(false);
         openHostsView = (ListView) findViewById(R.id.openHosts);
@@ -101,8 +93,6 @@ public class MainActivity extends AppCompatActivity {
         scan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //scanPorts.setEnabled(false);
-                saveOutput.setEnabled(false);
                 viewSummary.setEnabled(false);
                 InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
@@ -117,61 +107,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-
-        /*scanPorts.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                InputMethodManager imm = (InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE);
-                imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-
-                String ipAd = ip.getText().toString();
-                int cid = Integer.parseInt(cidr.getText().toString());
-                String portsToScan = ports.getText().toString();
-
-
-                portScanner = new PortScanner(context,hostScanner.discoveredHosts,portsToScan,openHostsView);
-                portScanner.execute(10000);
-
-            }
-        });*/
-
-        /*saveOutput.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                int tO = Integer.parseInt(timeout.getText().toString());
-
-                String message = " ";
-                message += "Running with a timeout of " + Integer.toString(tO) + " \n";
-                if(hostScanner != null){
-                    message += "Open Hosts Data: \n";
-                    for(Host h: hostScanner.discoveredHosts){
-                        message += h.getIpAd() + " discovered through " + h.getDiscoveredThrough() + "\n";
-                    }
-                    message += "------------\n";
-                }
-
-                if(portScanner != null){
-                    message += "Open Ports Data: \n";
-                    for(String s: portScanner.openPortsHosts){
-                        message += s + "\n";
-                    }
-                    message += "------------\n";
-                }
-
-                if(portScanner == null && hostScanner == null){
-                    Toast.makeText(getApplicationContext(),"Nothing to save!",Toast.LENGTH_SHORT).show();
-                }else{
-                    Intent intent = new Intent(Intent.ACTION_SENDTO);
-                    intent.setData(Uri.parse("mailto:tjaved.bscs15seecs@seecs.edu.pk")); // only email apps should handle this
-                    intent.putExtra(Intent.EXTRA_TEXT,message);
-                    intent.putExtra(Intent.EXTRA_SUBJECT, "NetworkScanner Data");
-                    if (intent.resolveActivity(getPackageManager()) != null) {
-                        startActivity(intent);
-                    }
-                }
-
-            }
-        });*/
 
         viewSummary.setOnClickListener(new View.OnClickListener() {
             @Override
