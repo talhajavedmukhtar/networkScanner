@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -30,14 +31,18 @@ public class PortScanner extends AsyncTask{
     private ArrayAdapter<String> openPortsAdapter;
 
     private int maxPort;
+    private int timeout;
+    private int noOfThreads;
 
     private TextView devicesDoneView;
 
-    String devicesDoneMessage;
+    private Context context;
 
     private PortScanActivity portScanActivity;
 
-    PortScanner(Context context, ArrayList<String> sIps, ArrayList<String> oPM, ArrayAdapter<String> adap, int max){
+    PortScanner(Context ctx, ArrayList<String> sIps, ArrayList<String> oPM, ArrayAdapter<String> adap, int max, int tO, int threads){
+        context = ctx;
+
         progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.psLoading);
         devicesDoneView = (TextView) ((Activity)context).findViewById(R.id.devicesDoneView);
         selectedIps = sIps;
@@ -48,16 +53,18 @@ public class PortScanner extends AsyncTask{
         openPortsAdapter = adap;
 
         maxPort = max;
+        timeout = tO;
+        noOfThreads = threads;
     }
 
 
-    private static Future<Boolean> portIsOpen(final ExecutorService es, final String ip , final int port){
+    private static Future<Boolean> portIsOpen(final ExecutorService es, final String ip , final int port, final int timeout){
         return es.submit(new Callable<Boolean>(){
             @Override
             public Boolean call() throws Exception {
                 Socket socket = new Socket();
                 try {
-                    socket.connect(new InetSocketAddress(ip, port), 1000);
+                    socket.connect(new InetSocketAddress(ip, port), timeout);
                     socket.close();
                     return true;
                 } catch (Exception ex) {
@@ -72,14 +79,14 @@ public class PortScanner extends AsyncTask{
     }
 
     private void scanPorts(String ip, int max){
-        final ExecutorService es = Executors.newFixedThreadPool(1000);
+        final ExecutorService es = Executors.newFixedThreadPool(noOfThreads);
         ArrayList<Future<Boolean>> futures = new ArrayList<>();
 
         progressBar.setProgress(0);
 
 
         for (int i = 0; i < max; i++) {
-            futures.add(portIsOpen(es, ip, i));
+            futures.add(portIsOpen(es, ip, i, timeout));
         }
 
         es.shutdown();
@@ -126,7 +133,12 @@ public class PortScanner extends AsyncTask{
         int i;
         for(i = 0; i < selectedIps.size(); i++){
             publishProgress(i);
-            scanPorts(selectedIps.get(i),maxPort);
+            try{
+                scanPorts(selectedIps.get(i),maxPort);
+            }catch (Exception ex){
+                Log.d(TAG,ex.getMessage());
+                Toast.makeText(context,"Please try with a fewer number of threads",Toast.LENGTH_LONG).show();
+            }
         }
         publishProgress(i);
 

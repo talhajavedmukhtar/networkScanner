@@ -29,6 +29,8 @@ public class PortScanActivity extends AppCompatActivity {
     static final String TAG = Tags.makeTag("PortScan");
 
     private ArrayList<String> selectedIps;
+    private int timeout;
+    private int noOfThreads;
 
     private ProgressBar progressBar;
     private TextView devicesDoneView;
@@ -50,6 +52,8 @@ public class PortScanActivity extends AppCompatActivity {
     public static void runOnUI(Runnable runnable) {
         UIHandler.post(runnable);
     }
+
+    private AsyncTask portScan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -110,6 +114,7 @@ public class PortScanActivity extends AppCompatActivity {
         closeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                portScan.cancel(true);
                 finish();
             }
         });
@@ -118,6 +123,9 @@ public class PortScanActivity extends AppCompatActivity {
         progressBar.setMax(maxPort);
 
         selectedIps = getIntent().getExtras().getStringArrayList("selectedIps");
+        timeout = getIntent().getExtras().getInt("timeout");
+        noOfThreads = getIntent().getExtras().getInt("noOfThreads");
+
         devicesDoneMessage = "/" + selectedIps.size() + " devices done";
 
         ArrayList<String> openPortMessages = new ArrayList<>();
@@ -129,7 +137,7 @@ public class PortScanActivity extends AppCompatActivity {
         openPortsAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1, android.R.id.text1, openPortMessages);
         openPortsView.setAdapter(openPortsAdapter);
 
-        AsyncTask portScan = new PortScanner(this,selectedIps,openPortMessages,openPortsAdapter,maxPort);
+        portScan = new PortScanner(this,selectedIps,openPortMessages,openPortsAdapter,maxPort,timeout,noOfThreads);
         portScan.execute();
     }
 

@@ -1,5 +1,6 @@
 package talhajavedmukhtar.networkscan;
 
+import android.app.DialogFragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
@@ -24,7 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 
-public class SummaryActivity extends AppCompatActivity {
+public class SummaryActivity extends AppCompatActivity implements PScanParametersDialog.ParametersDialogListener{
     final String TAG = Tags.makeTag("Summary");
 
     private MacToVendorMap macToVendorMap;
@@ -38,6 +39,10 @@ public class SummaryActivity extends AppCompatActivity {
     private Button closeButton;
     private Button saveButton;
     private Button portScanButton;
+
+    private int timeout;
+    private int noOfThreads;
+    private ArrayList<String> selectedIps;
 
     public static ArrayList<Host> discoveredHosts;
 
@@ -187,7 +192,7 @@ public class SummaryActivity extends AppCompatActivity {
             public void onClick(View v) {
                 SparseBooleanArray arr = uniqueIpsLV.getCheckedItemPositions();
 
-                ArrayList<String> selectedIps = new ArrayList<>();
+                selectedIps = new ArrayList<>();
 
                 //pass list of ips to next activity
                 for(int i = 0; i < arr.size(); i++){
@@ -196,9 +201,11 @@ public class SummaryActivity extends AppCompatActivity {
                     }
                 }
 
-                Intent intent = new Intent(getBaseContext(), PortScanActivity.class);
-                intent.putExtra("selectedIps",selectedIps);
-                startActivity(intent);
+                PScanParametersDialog paraDialog = new PScanParametersDialog();
+                Bundle bundle = new Bundle();
+                bundle.putInt("noOfIPs",selectedIps.size());
+                paraDialog.setArguments(bundle);
+                paraDialog.show(getFragmentManager(),"paraDialog");
             }
         });
 
@@ -210,4 +217,15 @@ public class SummaryActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog) {
+        timeout = ((PScanParametersDialog)dialog).getTimeout();
+        noOfThreads = ((PScanParametersDialog)dialog).getNoOfThreads();
+
+        Intent intent = new Intent(getBaseContext(), PortScanActivity.class);
+        intent.putExtra("selectedIps",selectedIps);
+        intent.putExtra("timeout",timeout);
+        intent.putExtra("noOfThreads",noOfThreads);
+        startActivity(intent);
+    }
 }
