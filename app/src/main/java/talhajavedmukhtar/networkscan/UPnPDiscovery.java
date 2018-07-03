@@ -135,7 +135,6 @@ public class UPnPDiscovery extends AsyncTask {
                 Log.d(TAG,"done");
                 //Toast.makeText(mContext,"Socket for UPnP Discovery Closed",Toast.LENGTH_SHORT).show();
                 progressBar.setProgress(progressBar.getMax());
-                progressBar.setProgress(0);
             }
             lock.release();
 

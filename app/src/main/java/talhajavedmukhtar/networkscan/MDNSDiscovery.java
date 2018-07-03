@@ -134,7 +134,6 @@ public class MDNSDiscovery extends AsyncTask{
             Log.d(TAG,"A discovery listener removed." );
         }
         progressBar.setProgress(progressBar.getMax());
-        progressBar.setProgress(0);
     }
 
     public void discoverServices(String serviceType) {

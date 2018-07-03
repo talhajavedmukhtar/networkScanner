@@ -218,9 +218,5 @@ public class TCPSYNDiscovery extends AsyncTask{
         Log.d(TAG,"New progress: "+Integer.toString((int)values[0]));
     }
 
-    @Override
-    protected void onPostExecute(Object o) {
-        progressBar.setProgress(0);
-    }
 }
 
