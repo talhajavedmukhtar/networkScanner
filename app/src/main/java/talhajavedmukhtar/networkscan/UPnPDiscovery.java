@@ -95,9 +95,14 @@ public class UPnPDiscovery extends AsyncTask {
                     Log.d(TAG,"Waiting for UPnP");
 
                     int progressStatus;
-                    int max = 100;
-                    progressBar.setMax(max);
-                    progressStatus = (((int)(curTime - time))/timeout)*100;
+                    progressStatus = (((int)(curTime - time))/timeout)*(progressBar.getMax());
+
+                    //progressbar should be at max only when all scans are done
+                    if(progressStatus >= progressBar.getMax()){
+                        progressStatus = progressBar.getMax() - (int) (0.1 * progressBar.getMax());
+                        Log.d("ProgressBarDynUPNP",Integer.toString(progressStatus));
+                    }
+
                     progressBar.setProgress(progressStatus);
 
                     DatagramPacket datagramPacket = new DatagramPacket(new byte[1024], 1024);
@@ -134,7 +139,9 @@ public class UPnPDiscovery extends AsyncTask {
                 }
                 Log.d(TAG,"done");
                 //Toast.makeText(mContext,"Socket for UPnP Discovery Closed",Toast.LENGTH_SHORT).show();
-                progressBar.setProgress(progressBar.getMax());
+                int progressStatus = progressBar.getMax() - (int) (0.1 * progressBar.getMax());
+                progressBar.setProgress(progressStatus);
+                Log.d("ProgressBarDynUPNP",Integer.toString(progressStatus));
             }
             lock.release();
 

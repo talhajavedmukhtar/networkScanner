@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 
@@ -64,6 +65,10 @@ public class HostScanner extends AsyncTask{
                     //wait until this is done
                 }
             }
+
+            ProgressBar progressBar = (ProgressBar) ((Activity)mContext).findViewById(R.id.pbLoading);
+            progressBar.setProgress(progressBar.getMax());
+
             return 1;
         }catch (Exception ex){
             Log.d(TAG,ex.getMessage() + Integer.toString(i));

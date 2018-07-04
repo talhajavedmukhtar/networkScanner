@@ -133,7 +133,7 @@ public class MDNSDiscovery extends AsyncTask{
             mNsdManager.stopServiceDiscovery(dListener);
             Log.d(TAG,"A discovery listener removed." );
         }
-        progressBar.setProgress(progressBar.getMax());
+        progressBar.setProgress(progressBar.getMax() - (int)(0.1*progressBar.getMax()));
     }
 
     public void discoverServices(String serviceType) {
@@ -243,12 +243,17 @@ public class MDNSDiscovery extends AsyncTask{
             @Override
             public void run() {
                 int progressStatus;
-                int max = 100;
-                progressBar.setMax(max);
                 Log.d(TAG,"progress bar max " + progressBar.getMax());
 
                 for(int i = 1; i <= intervals; i++){
-                    progressStatus = (i*max)/intervals;
+                    progressStatus = (i*progressBar.getMax())/intervals;
+
+                    //progressbar should be at max only when all scans are done
+                    if(progressStatus == progressBar.getMax()){
+                        progressStatus -= (progressBar.getMax())/(2*intervals);
+                        Log.d("ProgressBarDynMDNS",Integer.toString(progressStatus));
+                    }
+
                     Log.d(TAG,"new progress status: " + progressStatus);
 
                     try {

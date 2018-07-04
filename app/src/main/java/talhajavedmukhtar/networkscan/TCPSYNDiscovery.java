@@ -173,7 +173,9 @@ public class TCPSYNDiscovery extends AsyncTask{
 
         ArrayList<String> addresses = getAddressRange(ipAddress,cidr);
         int max = addresses.size();
-        progressBar.setMax(max);
+        progressBar.setMax(max+(int)(0.1*max));
+
+        Log.d("ProgressBarDyn",Integer.toString(max+(int)(0.1*max)));
 
         final ExecutorService es = Executors.newFixedThreadPool(max);
         ArrayList<Future<Boolean>> futures = new ArrayList<>();
