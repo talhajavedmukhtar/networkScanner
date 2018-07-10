@@ -21,7 +21,7 @@ public class HostScanner extends AsyncTask{
     int cidr;
     int timeout;
 
-    static Context mContext;
+    Context mContext;
 
     public static ArrayList<Host> discoveredHosts;
     private static ArrayList<String> responses;

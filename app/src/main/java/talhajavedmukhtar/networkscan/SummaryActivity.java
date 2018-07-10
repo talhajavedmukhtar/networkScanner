@@ -223,7 +223,7 @@ public class SummaryActivity extends AppCompatActivity implements PScanParameter
 
     @Override
     public void onDialogPositiveClick(DialogFragment dialog) {
-        timeout = ((PScanParametersDialog)dialog).getTimeout();
+        timeout = ((PScanParametersDialog)dialog).getTimeout() * 1000;
         noOfThreads = ((PScanParametersDialog)dialog).getNoOfThreads();
 
         Intent intent = new Intent(getBaseContext(), PortScanActivity.class);

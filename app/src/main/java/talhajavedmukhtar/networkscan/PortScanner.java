@@ -63,52 +63,61 @@ public class PortScanner extends AsyncTask{
             @Override
             public Boolean call() throws Exception {
                 Socket socket = new Socket();
+                InetSocketAddress addr = new InetSocketAddress(ip, port);
                 try {
-                    socket.connect(new InetSocketAddress(ip, port), timeout);
+                    socket.connect(addr, timeout);
                     socket.close();
                     return true;
                 } catch (Exception ex) {
-                    Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip);
+                    //Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip);
                     /*if(ex.getMessage().contains("ECONNREFUSED")){
                         return true;
                     }*/
                     return false;
+                } finally {
+                    socket = null;
+                    addr = null;
+                    System.gc();
                 }
             }
         });
     }
 
     private void scanPorts(String ip, int max){
-        final ExecutorService es = Executors.newFixedThreadPool(noOfThreads);
-        ArrayList<Future<Boolean>> futures = new ArrayList<>();
-
         progressBar.setProgress(0);
 
+        int noOfBatches = (int)Math.ceil(max/noOfThreads);
+        int batchSize = max/noOfBatches;
 
-        for (int i = 0; i < max; i++) {
-            futures.add(portIsOpen(es, ip, i, timeout));
-        }
+        for(int b = 0; b < noOfBatches; b++){
+            final ExecutorService es = Executors.newFixedThreadPool(noOfThreads);
+            ArrayList<Future<Boolean>> futures = new ArrayList<>();
 
-        es.shutdown();
+            for (int i = b*batchSize; i < (b+1)*batchSize; i++) {
+                futures.add(portIsOpen(es, ip, i, timeout));
+            }
 
-        int i = 0;
-        for (final Future<Boolean> f : futures) {
-            try{
-                if (f.get()) {
-                    final int index = i;
-                    final String ipAd = ip;
-                    PortScanActivity.runOnUI(new Runnable() {
-                        @Override
-                        public void run() {
-                            updateHostInfo(ipAd,index);
-                        }
-                    });
+            es.shutdown();
+
+            int i = batchSize*b;
+            for (final Future<Boolean> f : futures) {
+                try{
+                    if (f.get()) {
+                        final int index = i;
+                        final String ipAd = ip;
+                        PortScanActivity.runOnUI(new Runnable() {
+                            @Override
+                            public void run() {
+                                updateHostInfo(ipAd,index);
+                            }
+                        });
+                    }
+                }catch (Exception e){
+                    Log.d(TAG,e.getMessage());
+                }finally {
+                    i += 1;
+                    progressBar.setProgress(i);
                 }
-            }catch (Exception e){
-                Log.d(TAG,e.getMessage());
-            }finally {
-                i += 1;
-                progressBar.setProgress(i);
             }
         }
     }
@@ -126,6 +135,12 @@ public class PortScanner extends AsyncTask{
         String updatedMessage = ip + " Open Ports Found: " + openPortsUpdated;
         openPortMessages.set(selectedIps.indexOf(ip),updatedMessage);
         openPortsAdapter.notifyDataSetChanged();
+
+        oldMessage = null;
+        parts = null;
+        updatedMessage = null;
+        System.gc();
+
     }
 
     @Override

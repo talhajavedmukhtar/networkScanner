@@ -31,7 +31,6 @@ public class MainActivity extends AppCompatActivity {
     private ListView openHostsView;
 
     private HostScanner hostScanner;
-    private PortScanner portScanner;
 
     public ProgressBar progressBar;
 
@@ -175,6 +174,5 @@ public class MainActivity extends AppCompatActivity {
                 ((gatewayInt >>>= 8) & 0xFF);
 
     }
-
 
 }

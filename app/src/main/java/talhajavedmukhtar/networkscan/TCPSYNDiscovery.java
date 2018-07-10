@@ -177,7 +177,7 @@ public class TCPSYNDiscovery extends AsyncTask{
 
         Log.d("ProgressBarDyn",Integer.toString(max+(int)(0.1*max)));
 
-        final ExecutorService es = Executors.newFixedThreadPool(max);
+        final ExecutorService es = Executors.newFixedThreadPool(500);
         ArrayList<Future<Boolean>> futures = new ArrayList<>();
 
 

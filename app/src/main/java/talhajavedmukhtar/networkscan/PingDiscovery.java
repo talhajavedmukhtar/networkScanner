@@ -28,7 +28,7 @@ public class PingDiscovery extends AsyncTask {
     int cidr;
     static int timeout;
 
-    static Context mContext;
+    private Context mContext;
 
     private static ArrayList<Host> discoveredHosts;
     private static ArrayList<String> responses;
@@ -174,7 +174,7 @@ public class PingDiscovery extends AsyncTask {
         int max = addresses.size();
         progressBar.setMax(max+(int)(0.1*max));
 
-        final ExecutorService es = Executors.newFixedThreadPool(max);
+        final ExecutorService es = Executors.newFixedThreadPool(500);
 
         final ArrayList<Future<Boolean>> futures = new ArrayList<>();
         for (String addr : addresses) {
