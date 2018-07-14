@@ -30,9 +30,16 @@ public class PortScanner extends AsyncTask{
     private ArrayList<String> openPortMessages;
     private ArrayAdapter<String> openPortsAdapter;
 
+    int tasksDone;
+    int tasksAdded;
+
     private int maxPort;
     private int timeout;
     private int noOfThreads;
+
+    private ArrayList<Integer> portsList;
+
+    private ExecutorService executorService;
 
     private TextView devicesDoneView;
 
@@ -55,6 +62,9 @@ public class PortScanner extends AsyncTask{
         maxPort = max;
         timeout = tO;
         noOfThreads = threads;
+
+        tasksAdded = 0;
+        tasksDone = 0;
     }
 
 
@@ -83,10 +93,88 @@ public class PortScanner extends AsyncTask{
         });
     }
 
-    private void scanPorts(String ip, int max){
+    private void portIsOpen(final String ip , final int port, final int timeout){
+        Socket socket = new Socket();
+        InetSocketAddress addr = new InetSocketAddress(ip, port);
+        Boolean open = false;
+        try {
+            socket.connect(addr, timeout);
+            socket.close();
+            open = true;
+        } catch (Exception ex) {
+            Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip + " and port: " + port );
+        } finally {
+            socket = null;
+            addr = null;
+            System.gc();
+
+            if(open){
+                PortScanActivity.runOnUI(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateHostInfo(ip,port);
+                    }
+                });
+            }
+
+            synchronized (this){
+                tasksDone += 1;
+            }
+            progressBar.setProgress(tasksDone);
+            if(tasksDone == maxPort){
+                executorService.shutdown();
+            }else{
+                synchronized (this){
+                    if(!portsList.isEmpty()){
+                        final int nextPort = portsList.get(0);
+                        portsList.remove(0);
+                        executorService.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                portIsOpen(ip,nextPort,timeout);
+                            }
+                        });
+                        tasksAdded++;
+                    }
+                }
+            }
+        }
+    }
+
+    private void scanPorts(final String ip, int max){
         progressBar.setProgress(0);
 
-        int noOfBatches = (int)Math.ceil(max/noOfThreads);
+        tasksDone = 0;
+        portsList = new ArrayList<>();
+
+        for(int i = 0; i < maxPort; i++){
+            portsList.add(i);
+        }
+
+        executorService = Executors.newFixedThreadPool(noOfThreads);
+
+        tasksAdded = 0;
+        while(tasksAdded != (noOfThreads-1)){
+            synchronized (this){
+                if(!portsList.isEmpty()){
+                    final int port = portsList.get(0);
+                    portsList.remove(0);
+                    executorService.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            portIsOpen(ip,port,timeout);
+                        }
+                    });
+                    tasksAdded++;
+                }
+            }
+        }
+
+        while(!executorService.isShutdown()){
+            //
+        }
+
+        /*int noOfBatches = (int)Math.ceil(max/noOfThreads);
         int batchSize = max/noOfBatches;
 
         for(int b = 0; b < noOfBatches; b++){
@@ -103,15 +191,7 @@ public class PortScanner extends AsyncTask{
             for (final Future<Boolean> f : futures) {
                 try{
                     if (f.get()) {
-                        //final int index = i;
-                        //final String ipAd = ip;
                         updateHostInfo(ip,i);
-                        /*PortScanActivity.runOnUI(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateHostInfo(ipAd,index);
-                            }
-                        });*/
                     }
                 }catch (Exception e){
                     Log.d(TAG,e.getMessage());
@@ -120,7 +200,7 @@ public class PortScanner extends AsyncTask{
                     progressBar.setProgress(i);
                 }
             }
-        }
+        }*/
     }
 
     private void updateHostInfo(String ip, int openPort){

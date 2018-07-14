@@ -227,17 +227,19 @@ public class PingDiscovery extends AsyncTask {
 
         executorService = Executors.newFixedThreadPool(noOfThreads);
 
-        while(!addresses.isEmpty() && tasksAdded != (noOfThreads-1)){
+        while(tasksAdded != (noOfThreads-1)){
             synchronized (this){
-                final String ip = addresses.get(0);
-                addresses.remove(0);
-                executorService.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        hostIsActive(ip,timeout);
-                    }
-                });
-                tasksAdded++;
+                if(!addresses.isEmpty()){
+                    final String ip = addresses.get(0);
+                    addresses.remove(0);
+                    executorService.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            hostIsActive(ip,timeout);
+                        }
+                    });
+                    tasksAdded++;
+                }
             }
         }
 

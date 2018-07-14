@@ -75,7 +75,7 @@ public class TCPSYNDiscovery extends AsyncTask{
 
         progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
     }
-    
+
 
     public ArrayList getAddressRange(String ip, int cidr){
         //double numHosts = Math.pow(2,(32 - cidr));
@@ -183,17 +183,19 @@ public class TCPSYNDiscovery extends AsyncTask{
         executorService = Executors.newFixedThreadPool(noOfThreads);
 
         tasksAdded = 0;
-        while(!addresses.isEmpty() && tasksAdded != (noOfThreads-1)){
+        while(tasksAdded != (noOfThreads-1)){
             synchronized (this){
-                final String ip = addresses.get(0);
-                addresses.remove(0);
-                executorService.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        hostIsActive(ip,timeout);
-                    }
-                });
-                tasksAdded++;
+                if(!addresses.isEmpty()){
+                    final String ip = addresses.get(0);
+                    addresses.remove(0);
+                    executorService.execute(new Runnable() {
+                        @Override
+                        public void run() {
+                            hostIsActive(ip,timeout);
+                        }
+                    });
+                    tasksAdded++;
+                }
             }
         }
 
@@ -241,10 +243,10 @@ public class TCPSYNDiscovery extends AsyncTask{
             }
 
 
-            progressBar.setProgress(tasksDone);
             synchronized (this){
                 tasksDone += 1;
             }
+            progressBar.setProgress(tasksDone);
             if(tasksDone == max){
                 Log.d(TAG,tasksDone + " out of " + max + " done" + "shutting down executor now");
                 executorService.shutdown();
