@@ -69,7 +69,7 @@ public class PortScanner extends AsyncTask{
                     socket.close();
                     return true;
                 } catch (Exception ex) {
-                    //Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip);
+                    Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip + " and port: " + port );
                     /*if(ex.getMessage().contains("ECONNREFUSED")){
                         return true;
                     }*/
@@ -103,14 +103,15 @@ public class PortScanner extends AsyncTask{
             for (final Future<Boolean> f : futures) {
                 try{
                     if (f.get()) {
-                        final int index = i;
-                        final String ipAd = ip;
-                        PortScanActivity.runOnUI(new Runnable() {
+                        //final int index = i;
+                        //final String ipAd = ip;
+                        updateHostInfo(ip,i);
+                        /*PortScanActivity.runOnUI(new Runnable() {
                             @Override
                             public void run() {
                                 updateHostInfo(ipAd,index);
                             }
-                        });
+                        });*/
                     }
                 }catch (Exception e){
                     Log.d(TAG,e.getMessage());

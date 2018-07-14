@@ -49,6 +49,9 @@ public class PScanParametersDialog extends DialogFragment {
 
         noOfIPs = getArguments().getInt("noOfIPs");
 
+        int minsToComplete = calculateEstTime();
+        estimatedTime.setText(estimatedTimeMessage + Integer.toString(minsToComplete));
+
         noOfThreads.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {

@@ -3,6 +3,8 @@ package talhajavedmukhtar.networkscan;
 import android.app.Activity;
 import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 import android.util.Log;
 import android.widget.ArrayAdapter;
@@ -14,11 +16,20 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import javax.security.auth.callback.Callback;
 
 /**
  * Created by Talha on 4/4/18.
@@ -36,6 +47,15 @@ public class TCPSYNDiscovery extends AsyncTask{
     private static ArrayList<String> responses;
     private static ArrayAdapter<String> responseAdapter;
 
+    private ArrayList<String> addresses;
+
+    private ExecutorService executorService;
+
+    int max;
+
+    int tasksDone;
+    int tasksAdded;
+
     private ProgressBar progressBar;
 
 
@@ -50,30 +70,12 @@ public class TCPSYNDiscovery extends AsyncTask{
         responseAdapter = adap;
         timeout = tO;
 
+        tasksDone = 0;
+        tasksAdded = 0;
 
         progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
     }
-
-
-    public static Future<Boolean> hostIsActive(final ExecutorService es, final String ip , final int timeout){
-        return es.submit(new Callable<Boolean>(){
-            @Override
-            public Boolean call() throws Exception {
-                Socket socket = new Socket();
-                try {
-                    socket.connect(new InetSocketAddress(ip, 7), timeout);
-                    socket.close();
-                    return true;
-                } catch (Exception ex) {
-                    Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip);
-                    if(ex.getMessage().contains("ECONNREFUSED")){
-                        return true;
-                    }
-                    return false;
-                }
-            }
-        });
-    }
+    
 
     public ArrayList getAddressRange(String ip, int cidr){
         //double numHosts = Math.pow(2,(32 - cidr));
@@ -171,44 +173,32 @@ public class TCPSYNDiscovery extends AsyncTask{
             }
         });
 
-        ArrayList<String> addresses = getAddressRange(ipAddress,cidr);
-        int max = addresses.size();
+        addresses = getAddressRange(ipAddress,cidr);
+
+        max = addresses.size();
         progressBar.setMax(max+(int)(0.1*max));
 
-        Log.d("ProgressBarDyn",Integer.toString(max+(int)(0.1*max)));
+        int noOfThreads = 200;
 
-        final ExecutorService es = Executors.newFixedThreadPool(500);
-        ArrayList<Future<Boolean>> futures = new ArrayList<>();
+        executorService = Executors.newFixedThreadPool(noOfThreads);
 
-
-        for (String addr : addresses) {
-            futures.add(hostIsActive(es, addr, timeout));
+        tasksAdded = 0;
+        while(!addresses.isEmpty() && tasksAdded != (noOfThreads-1)){
+            synchronized (this){
+                final String ip = addresses.get(0);
+                addresses.remove(0);
+                executorService.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        hostIsActive(ip,timeout);
+                    }
+                });
+                tasksAdded++;
+            }
         }
 
-        es.shutdown();
-
-        int i = 0;
-        for (final Future<Boolean> f : futures) {
-            try{
-                if (f.get()) {
-                    final String ip = addresses.get(futures.indexOf(f));
-                    final String add = ip + " : discovered through TCP SYN";
-                    MainActivity.runOnUI(new Runnable() {
-                        @Override
-                        public void run() {
-                            discoveredHosts.add(new Host(ip,"TCP SYN"));
-                            responses.add(add);
-                            responseAdapter.notifyDataSetChanged();
-                        }
-                    });
-                    //openHosts.add(addresses.get(futures.indexOf(f)));
-                }
-            }catch (Exception e){
-                Log.d(TAG,e.getMessage());
-            }finally {
-                i += 1;
-                publishProgress(i);
-            }
+        while(!executorService.isShutdown()){
+            //
         }
 
         return null;
@@ -218,6 +208,63 @@ public class TCPSYNDiscovery extends AsyncTask{
     protected void onProgressUpdate(Object[] values) {
         progressBar.setProgress((int)values[0]);
         Log.d(TAG,"New progress: "+Integer.toString((int)values[0]));
+    }
+
+    private void hostIsActive(final String ip , final int timeout){
+        Log.d(TAG,"Running for ip: "+ ip);
+
+        Boolean open = false;
+        try {
+            Socket socket = new Socket();
+            socket.connect(new InetSocketAddress(ip, 7), timeout);
+            socket.close();
+            open = true;
+        } catch (Exception ex) {
+            Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip);
+            if(ex.getMessage().contains("ECONNREFUSED")){
+                open = true;
+            }else{
+                open = false;
+            }
+        } finally {
+            if(open){
+                final String add = ip + " : discovered through TCP SYN";
+                MainActivity.runOnUI(new Runnable() {
+                    @Override
+                    public void run() {
+                        discoveredHosts.add(new Host(ip,"TCP SYN"));
+                        responses.add(add);
+                        responseAdapter.notifyDataSetChanged();
+
+                    }
+                });
+            }
+
+
+            progressBar.setProgress(tasksDone);
+            synchronized (this){
+                tasksDone += 1;
+            }
+            if(tasksDone == max){
+                Log.d(TAG,tasksDone + " out of " + max + " done" + "shutting down executor now");
+                executorService.shutdown();
+            }else{
+                Log.d(TAG,tasksDone + " out of " + max + " done");
+                synchronized (this){
+                    if(!addresses.isEmpty()){
+                        final String nextIp = addresses.get(0);
+                        addresses.remove(0);
+                        executorService.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                hostIsActive(nextIp,timeout);
+                            }
+                        });
+                        tasksAdded++;
+                    }
+                }
+            }
+        }
     }
 
 }

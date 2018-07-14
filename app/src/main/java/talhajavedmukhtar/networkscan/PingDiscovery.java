@@ -34,6 +34,15 @@ public class PingDiscovery extends AsyncTask {
     private static ArrayList<String> responses;
     private static ArrayAdapter<String> responseAdapter;
 
+    private ArrayList<String> addresses;
+
+    private ExecutorService executorService;
+
+    int max;
+
+    int tasksDone;
+    int tasksAdded;
+
     private ProgressBar progressBar;
 
     PingDiscovery(String ipAd, int c, Context context, ArrayList<Host> hosts, ArrayList<String> resp, ArrayAdapter<String> adap, int tO){
@@ -47,31 +56,70 @@ public class PingDiscovery extends AsyncTask {
         responses = resp;
         responseAdapter = adap;
 
+        tasksDone = 0;
+        tasksAdded = 0;
+
         progressBar = (ProgressBar) ((Activity)context).findViewById(R.id.pbLoading);
     }
 
+    private void hostIsActive(final String ip , final int timeout){
+        Log.d(TAG,"Running for ip: "+ ip);
 
-    public static Future<Boolean> hostIsActive(final ExecutorService es, final String ip){
-        final Runtime runtime = Runtime.getRuntime();
-        return es.submit(new Callable<Boolean>(){
-            @Override
-            public Boolean call() throws Exception {
-                try {
-                    Process  mIpAddrProcess = runtime.exec("/system/bin/ping -c 1 -W " + (timeout/1000) + " " +ip);
-                    int mExitValue = mIpAddrProcess.waitFor();
+        Runtime runtime = Runtime.getRuntime();
 
-                    Log.d(TAG,"Exit Message: " + Integer.toString(mExitValue));
-                    if(mExitValue==0){
-                        return true;
-                    }else{
-                        return false;
+        Boolean open = false;
+        try {
+            Process  mIpAddrProcess = runtime.exec("/system/bin/ping -c 1 -W " + (timeout/1000) + " " +ip);
+            int mExitValue = mIpAddrProcess.waitFor();
+
+            Log.d(TAG,"Exit Message: " + Integer.toString(mExitValue));
+            if(mExitValue==0){
+                open = true;
+            }else{
+                open =  false;
+            }
+        } catch (Exception ex) {
+            Log.d(TAG,ex.getMessage());
+            open = false;
+        }finally {
+            if(open){
+                final String add = ip + " : discovered through ICMP Ping";
+                MainActivity.runOnUI(new Runnable() {
+                    @Override
+                    public void run() {
+                        discoveredHosts.add(new Host(ip,"ICMP Ping"));
+                        responses.add(add);
+                        responseAdapter.notifyDataSetChanged();
+
                     }
-                } catch (Exception ex) {
-                    Log.d(TAG,ex.getMessage());
-                    return false;
+                });
+            }
+
+            progressBar.setProgress(tasksDone);
+            synchronized (this){
+                tasksDone += 1;
+            }
+            if(tasksDone == max){
+                Log.d(TAG,tasksDone + " out of " + max + " done" + "shutting down executor now");
+                executorService.shutdown();
+            }else{
+                Log.d(TAG,tasksDone + " out of " + max + " done");
+                synchronized (this){
+                    if(!addresses.isEmpty()){
+                        final String nextIp = addresses.get(0);
+                        addresses.remove(0);
+                        executorService.execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                hostIsActive(nextIp,timeout);
+                            }
+                        });
+
+                        tasksAdded++;
+                    }
                 }
             }
-        });
+        }
     }
 
     public ArrayList getAddressRange(String ip, int cidr){
@@ -170,48 +218,34 @@ public class PingDiscovery extends AsyncTask {
             }
         });
 
-        ArrayList<String> addresses = getAddressRange(ipAddress,cidr);
-        int max = addresses.size();
+        addresses = getAddressRange(ipAddress,cidr);
+
+        max = addresses.size();
         progressBar.setMax(max+(int)(0.1*max));
 
-        final ExecutorService es = Executors.newFixedThreadPool(500);
+        int noOfThreads = 200;
 
-        final ArrayList<Future<Boolean>> futures = new ArrayList<>();
-        for (String addr : addresses) {
-            futures.add(hostIsActive(es, addr));
-        }
-        es.shutdown();
+        executorService = Executors.newFixedThreadPool(noOfThreads);
 
-        int  i = 0;
-        for (final Future<Boolean> f : futures) {
-            try{
-                if (f.get()) {
-                    final String add = addresses.get(futures.indexOf(f));
-                    final String resp = add + " : discovered through ICMP Ping";
-                    MainActivity.runOnUI(new Runnable() {
-                        @Override
-                        public void run() {
-                            discoveredHosts.add(new Host(add,"ICMP Ping"));
-                            responses.add(resp);
-                            responseAdapter.notifyDataSetChanged();
-                        }
-                    });
-                    //openHosts.add(addresses.get(futures.indexOf(f)));
-                }
-            }catch (Exception e){
-                Log.d(TAG,e.getMessage());
-            }finally {
-                i += 1;
-                publishProgress(i);
+        while(!addresses.isEmpty() && tasksAdded != (noOfThreads-1)){
+            synchronized (this){
+                final String ip = addresses.get(0);
+                addresses.remove(0);
+                executorService.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        hostIsActive(ip,timeout);
+                    }
+                });
+                tasksAdded++;
             }
+        }
+
+        while(!executorService.isShutdown()){
+            //
         }
 
         return null;
     }
 
-    @Override
-    protected void onProgressUpdate(Object[] values) {
-        progressBar.setProgress((int)values[0]);
-        //Log.d(TAG,"New progress: "+Integer.toString((int)values[0]));
-    }
 }
