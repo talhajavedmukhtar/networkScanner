@@ -9,7 +9,7 @@
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:id="@+id/noOfThreads"
-            android:text="1000"
+            android:text="500"
             android:layout_alignParentTop="true"
             android:hint="No of Threads"/>
     </android.support.design.widget.TextInputLayout>

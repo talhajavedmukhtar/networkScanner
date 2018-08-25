@@ -24,7 +24,8 @@
             </intent-filter>
         </activity>
         <activity android:name=".SummaryActivity" />
-        <activity android:name=".PortScanActivity"></activity>
+        <activity android:name=".PortScanActivity" />
+        <activity android:name=".BannerGrabActivity"></activity>
     </application>
 
 </manifest>

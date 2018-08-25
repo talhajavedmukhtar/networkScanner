@@ -102,7 +102,7 @@ public class PortScanner extends AsyncTask{
             socket.close();
             open = true;
         } catch (Exception ex) {
-            Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip + " and port: " + port );
+            //Log.d(TAG+".SocketError",ex.getMessage() + " for ip: " + ip + " and port: " + port );
         } finally {
             socket = null;
             addr = null;
@@ -119,12 +119,19 @@ public class PortScanner extends AsyncTask{
 
             synchronized (this){
                 tasksDone += 1;
-            }
-            progressBar.setProgress(tasksDone);
-            if(tasksDone == maxPort){
-                executorService.shutdown();
-            }else{
-                synchronized (this){
+                //Log.d(TAG,"Tasks completed: "+tasksDone);
+
+                PortScanActivity.runOnUI(new Runnable() {
+                    @Override
+                    public void run() {
+                        progressBar.setProgress(tasksDone);
+                    }
+                });
+
+                if(tasksDone == maxPort){
+                    //Log.d(TAG,"Tasks completed: all");
+                    executorService.shutdown();
+                }else{
                     if(!portsList.isEmpty()){
                         final int nextPort = portsList.get(0);
                         portsList.remove(0);
@@ -138,6 +145,7 @@ public class PortScanner extends AsyncTask{
                     }
                 }
             }
+
         }
     }
 
@@ -166,6 +174,10 @@ public class PortScanner extends AsyncTask{
                         }
                     });
                     tasksAdded++;
+                }
+
+                if(tasksDone == maxPort){
+                    break;
                 }
             }
         }
@@ -229,8 +241,10 @@ public class PortScanner extends AsyncTask{
         int i;
         for(i = 0; i < selectedIps.size(); i++){
             publishProgress(i);
+            Log.d(TAG,"Tasks completed: starting " + i);
             try{
                 scanPorts(selectedIps.get(i),maxPort);
+                Log.d(TAG,"Tasks completed: scanPorts");
             }catch (Exception ex){
                 Log.d(TAG,ex.getMessage());
                 Toast.makeText(context,"Please try with a fewer number of threads",Toast.LENGTH_LONG).show();

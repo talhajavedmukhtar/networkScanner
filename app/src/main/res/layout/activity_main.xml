@@ -85,6 +85,11 @@
                         android:text="View Summary"
                         android:id="@+id/viewSummary"/>
                 </LinearLayout>
+                <Button
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Grab Banners"
+                    android:id="@+id/grabBanners"/>
             </LinearLayout>
 
 
