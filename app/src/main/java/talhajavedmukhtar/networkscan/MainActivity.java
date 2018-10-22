@@ -20,6 +20,8 @@ import android.widget.ProgressBar;
 import java.util.ArrayList;
 
 import talhajavedmukhtar.networkscan.BannerGrabbers.BannerGrabber;
+import talhajavedmukhtar.networkscan.BannerGrabbers.HTTPBannerGrabber;
+import talhajavedmukhtar.networkscan.BannerGrabbers.SSHBannerGrabber;
 
 public class MainActivity extends AppCompatActivity {
     final String TAG = Tags.makeTag("Main");
@@ -67,7 +69,7 @@ public class MainActivity extends AppCompatActivity {
         scan = (Button) findViewById(R.id.scan);
         viewSummary = (Button) findViewById(R.id.viewSummary);
         viewSummary.setEnabled(false);
-        grabBanners = (Button) findViewById(R.id.grabBanners);
+        //grabBanners = (Button) findViewById(R.id.grabBanners);
         openHostsView = (ListView) findViewById(R.id.openHosts);
 
         progressBar = (ProgressBar) findViewById(R.id.pbLoading);
@@ -127,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        grabBanners.setOnClickListener(new View.OnClickListener() {
+        /*grabBanners.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ArrayList<String> uniqueIps = new ArrayList<>();
@@ -140,8 +142,13 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(getBaseContext(), BannerGrabActivity.class);
                 intent.putExtra("addressList",uniqueIps);
                 startActivity(intent);
+                //SSHBannerGrabber sshBannerGrabber = new SSHBannerGrabber();
+                //sshBannerGrabber.execute("192.168.100.1",10000,10000);
+
+
+
             }
-        });
+        });*/
 
         applicationData = (MyApp) getApplication();
         applicationData.initTask.execute();

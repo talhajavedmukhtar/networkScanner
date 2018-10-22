@@ -21,6 +21,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import talhajavedmukhtar.networkscan.BannerGrabbers.SSHBannerGrabber;
+
 public class SummaryActivity extends AppCompatActivity implements PScanParametersDialog.ParametersDialogListener{
     final String TAG = Tags.makeTag("Summary");
 
@@ -35,6 +37,7 @@ public class SummaryActivity extends AppCompatActivity implements PScanParameter
     private Button closeButton;
     private Button saveButton;
     private Button portScanButton;
+    private Button bannerGrabButton;
 
     private int timeout;
     private int noOfThreads;
@@ -210,6 +213,33 @@ public class SummaryActivity extends AppCompatActivity implements PScanParameter
                 bundle.putInt("noOfIPs",selectedIps.size());
                 paraDialog.setArguments(bundle);
                 paraDialog.show(getFragmentManager(),"paraDialog");
+            }
+        });
+
+        bannerGrabButton = (Button) findViewById(R.id.bannerGrab);
+        bannerGrabButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /*for (Host h: discoveredHosts) {
+                    String ip = h.getIpAd();
+                    Log.d(TAG,"ip: "+ip);
+                    SSHBannerGrabber sshBannerGrabber = new SSHBannerGrabber();
+                    sshBannerGrabber.execute(ip,10000,10000);
+                }*/
+                SparseBooleanArray arr = uniqueIpsLV.getCheckedItemPositions();
+
+                selectedIps = new ArrayList<>();
+
+                //pass list of ips to next activity
+                for(int i = 0; i < arr.size(); i++){
+                    if(arr.valueAt(i)){
+                        selectedIps.add(discoveredHosts.get(i).getIpAd());
+                    }
+                }
+
+                Intent intent = new Intent(getBaseContext(), BannerGrabActivity.class);
+                intent.putExtra("selectedIps",selectedIps);
+                startActivity(intent);
             }
         });
 

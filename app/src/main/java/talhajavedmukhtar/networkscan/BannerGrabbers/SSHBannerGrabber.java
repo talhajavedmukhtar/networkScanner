@@ -1,6 +1,5 @@
 package talhajavedmukhtar.networkscan.BannerGrabbers;
 
-import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -9,85 +8,57 @@ import java.io.PrintWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import talhajavedmukhtar.networkscan.Tags;
 
 /**
- * Created by Talha on 8/4/18.
+ * Created by Talha on 10/21/18.
  */
 
-public class HTTPBannerGrabber {
+public class SSHBannerGrabber{
     private int portNo;
     private final String TAG;
-    private String bannerGrabString;
-
+    //private String bannerGrabString;
     private Socket connectionSocket;
 
     public String result;
 
-    public HTTPBannerGrabber(){
-        portNo = 80;
-        TAG = Tags.makeTag("HTTPBannerGrabber");
-        bannerGrabString = "GET / HTTP/1.1\r\n\r\n";
+    public SSHBannerGrabber(){
+        portNo = 22;
+        TAG = Tags.makeTag("SSHBannerGrabber");
+
+        //working without the need to send a banner grab string
+        //bannerGrabString = "SSH-2.0-NS\r\n";
 
         connectionSocket = new Socket();
     }
 
-    public String execute(String ipAd, int cTO, int gTO){
-        final String ip = ipAd;
-        final int connectionTimeout = cTO;
-        int grabTimeout = (int) gTO;
-
+    public String execute(final String ip, final int cTO, int gTO){
         ExecutorService service = Executors.newSingleThreadExecutor();
 
         Future<String> f = service.submit(new Callable<String>() {
             @Override
             public String call() throws Exception {
-                return grabBanner(ip,connectionTimeout);
+                return grabBanner(ip,cTO);
             }
         });
 
         String banner;
         try {
-            banner = f.get(grabTimeout, TimeUnit.SECONDS);
+            banner = f.get(gTO, TimeUnit.SECONDS);
         } catch (Exception e) {
             Log.d(TAG,e.getMessage());
             banner = "";
         }
-
-        result = banner;
 
         return banner;
     }
-
-    /*protected String doInBackground(Object[] objects) {
-        final String ip = (String) objects[0];
-        final int connectionTimeout = (int) objects[1];
-        int grabTimeout = (int) objects[2];
-
-        ExecutorService service = Executors.newSingleThreadExecutor();
-
-        Future<String> f = service.submit(new Callable<String>() {
-            @Override
-            public String call() throws Exception {
-                return grabBanner(ip,connectionTimeout);
-            }
-        });
-
-        String banner;
-        try {
-            banner = f.get(grabTimeout, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            Log.d(TAG,e.getMessage());
-            banner = "";
-        }
-
-        return banner;
-    }*/
 
 
     private Boolean formConnection(String ip, int timeout){
@@ -95,7 +66,6 @@ public class HTTPBannerGrabber {
             connectionSocket.connect(new InetSocketAddress(ip,portNo),timeout);
             return true;
         }catch (Exception ex){
-            ex.printStackTrace();
             Log.d(TAG,"Could not connect to "+ ip + " at port "+ Integer.toString(portNo) + " " + ex.getMessage());
             return false;
         }
@@ -105,13 +75,9 @@ public class HTTPBannerGrabber {
         String response = "";
 
         try{
-            PrintWriter out = new PrintWriter(connectionSocket.getOutputStream(), true);
-            out.print(bannerGrabString);
-            out.flush();
             InputStream is = connectionSocket.getInputStream();
             byte[] buffer = new byte[1024];
             int read;
-            Log.d(TAG,"initiating reading...");
 
             while((read = is.read(buffer)) != -1) {
                 String output = new String(buffer, 0, read);
@@ -119,13 +85,17 @@ public class HTTPBannerGrabber {
 
                 if(output.length() > 0){
                     response += output;
+                    break;
                 }
+                /*if(output.length() > 0){
+                    response += output.split("\\n")[0];
+                    break;
+                }*/
             };
 
         }catch (Exception ex){
             Log.d(TAG,ex.getMessage());
         }
-
 
         return response;
     }
@@ -150,12 +120,11 @@ public class HTTPBannerGrabber {
             Log.d(TAG,ex.getMessage());
         }
 
-        Log.d(TAG,"For ip "+ip+" , message: "+message);
-
         return message;
     }
 
-    /*@Override
+    /*
+    @Override
     protected void onPostExecute(Object o) {
         super.onPostExecute(o);
         result = (String)o;
