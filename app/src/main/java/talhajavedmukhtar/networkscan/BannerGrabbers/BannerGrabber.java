@@ -127,4 +127,10 @@ public class BannerGrabber extends AsyncTask{
         super.onProgressUpdate(values);
         bannerGrabActivity.updateIPsDone((int)values[0]);
     }
+
+    @Override
+    protected void onPostExecute(Object o) {
+        super.onPostExecute(o);
+        bannerGrabActivity.enableSave();
+    }
 }

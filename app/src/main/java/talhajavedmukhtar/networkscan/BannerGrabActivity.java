@@ -75,6 +75,8 @@ public class BannerGrabActivity extends AppCompatActivity {
             }
         });
 
+        saveButton.setEnabled(false);
+
         new BannerGrabber(this,uniqueIps,grabbedBannersList,grabbedBannersAdapter,grabbedBannersFull,10000,10).execute();
     }
 
@@ -108,5 +110,9 @@ public class BannerGrabActivity extends AppCompatActivity {
         if (intent.resolveActivity(getPackageManager()) != null) {
             startActivity(intent);
         }
+    }
+
+    public void enableSave(){
+        saveButton.setEnabled(true);
     }
 }

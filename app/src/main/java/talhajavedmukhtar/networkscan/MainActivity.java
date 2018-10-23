@@ -152,6 +152,7 @@ public class MainActivity extends AppCompatActivity {
 
         applicationData = (MyApp) getApplication();
         applicationData.initTask.execute();
+        applicationData.initFinder.execute();
     }
 
 

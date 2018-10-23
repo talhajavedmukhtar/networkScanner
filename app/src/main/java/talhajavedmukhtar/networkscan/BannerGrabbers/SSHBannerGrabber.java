@@ -27,8 +27,6 @@ public class SSHBannerGrabber{
     //private String bannerGrabString;
     private Socket connectionSocket;
 
-    public String result;
-
     public SSHBannerGrabber(){
         portNo = 22;
         TAG = Tags.makeTag("SSHBannerGrabber");
@@ -122,6 +120,10 @@ public class SSHBannerGrabber{
 
         return message;
     }
+
+    /*public static String getSoftwareName(String banner){
+
+    }*/
 
     /*
     @Override
