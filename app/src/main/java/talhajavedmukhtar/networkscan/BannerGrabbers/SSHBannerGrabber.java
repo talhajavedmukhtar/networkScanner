@@ -98,7 +98,7 @@ public class SSHBannerGrabber{
         return response;
     }
 
-    public String grabBanner(String ip,int connectionTimeout){
+    private String grabBanner(String ip,int connectionTimeout){
         String message = "";
         if(formConnection(ip,connectionTimeout)){
             Log.d(TAG,"Connected to host "+ ip);

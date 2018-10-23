@@ -20,10 +20,6 @@ import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 
-import talhajavedmukhtar.networkscan.BannerGrabbers.BannerGrabber;
-import talhajavedmukhtar.networkscan.BannerGrabbers.HTTPBannerGrabber;
-import talhajavedmukhtar.networkscan.BannerGrabbers.SSHBannerGrabber;
-
 public class MainActivity extends AppCompatActivity {
     final String TAG = Tags.makeTag("Main");
 

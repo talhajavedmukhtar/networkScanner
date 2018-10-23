@@ -12,11 +12,9 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-import talhajavedmukhtar.networkscan.BannerGrabbers.BannerGrabber;
-import talhajavedmukhtar.networkscan.BannerGrabbers.HTTPBannerGrabber;
+import talhajavedmukhtar.networkscan.BannerGrabbers.BannerGrabHelper;
 
 import static talhajavedmukhtar.networkscan.MainActivity.UIHandler;
 
@@ -77,7 +75,7 @@ public class BannerGrabActivity extends AppCompatActivity {
 
         saveButton.setEnabled(false);
 
-        new BannerGrabber(this,uniqueIps,grabbedBannersList,grabbedBannersAdapter,grabbedBannersFull,10000,10).execute();
+        new BannerGrabHelper(this,uniqueIps,grabbedBannersList,grabbedBannersAdapter,grabbedBannersFull,10000,10).execute();
     }
 
     public void updateIPsDone(int i){
