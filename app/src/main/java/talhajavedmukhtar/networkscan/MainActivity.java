@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.DhcpInfo;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.v7.app.AppCompatActivity;
@@ -108,7 +109,7 @@ public class MainActivity extends AppCompatActivity {
                 int tO = Integer.parseInt(timeout.getText().toString());
 
                 hostScanner = new HostScanner(ipAd,cid,context,openHostsView,tO*1000 /*from seconds to ms*/);
-                hostScanner.execute();
+                hostScanner.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
             }
         });
 
@@ -151,8 +152,8 @@ public class MainActivity extends AppCompatActivity {
         });*/
 
         applicationData = (MyApp) getApplication();
-        applicationData.initTask.execute();
-        applicationData.initFinder.execute();
+        applicationData.initTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        applicationData.initFinder.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
 
