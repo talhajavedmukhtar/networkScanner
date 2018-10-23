@@ -19,6 +19,10 @@ public class Utils {
             return extractSSHProduct(banner);
         }
 
+        if(protocol.equals("http")){
+            return extractHTTPProduct(banner);
+        }
+
         return null;
     }
 
@@ -28,6 +32,10 @@ public class Utils {
 
         if(protocol.equals("ssh")){
             return extractSSHVersion(banner);
+        }
+
+        if(protocol.equals("http")){
+            return extractHTTPVersion(banner);
         }
 
         return null;
@@ -70,4 +78,56 @@ public class Utils {
     }
 
     //HTTP
+    private static String extractHTTPProduct(String banner){
+        Pattern p = Pattern.compile("Server:\\s.*");
+
+        Matcher m = p.matcher(banner);
+
+        if (m.find()){
+            String product = m.group(0);
+            product = product.split("\\s\\(")[0];
+
+            //remove version identifiers
+            product = product.replace("/?\\d+(\\.\\d+)?","");
+
+            //remove ending space
+            product = product.replace("\\s+$","");
+
+            return product;
+        }else{
+            return null;
+        }
+    }
+
+    private static String extractHTTPVersion(String banner){
+        Pattern p = Pattern.compile("Server:\\s.*");
+
+        Matcher m = p.matcher(banner);
+
+        if (m.find()){
+            String product = m.group(0);
+
+            //Remove the initial Server:
+            product = product.substring(8);
+
+            product = product.split("\\s\\(")[0];
+
+            Pattern p2 = Pattern.compile("/?\\d+(\\.\\d+)?");
+            Matcher m2 = p2.matcher(product);
+
+            if (m2.find()){
+                String version = m2.group(0);
+
+                if(version.charAt(0) == '/'){
+                    return version.substring(1);
+                }else{
+                    return version;
+                }
+            }else{
+                return "*";
+            }
+        }else{
+            return null;
+        }
+    }
 }

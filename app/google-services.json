@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "557344464779",
+    "firebase_url": "https://networkscan-de905.firebaseio.com",
+    "project_id": "networkscan-de905",
+    "storage_bucket": "networkscan-de905.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:557344464779:android:0e8e3e1ed39c785f",
+        "android_client_info": {
+          "package_name": "talhajavedmukhtar.networkscan"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "557344464779-jk1vh5msf4d1d7n3hu3afhp8cv1agnm5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "talhajavedmukhtar.networkscan",
+            "certificate_hash": "fa38ad450339dbff6d479d4084baaebd13ce152f"
+          }
+        },
+        {
+          "client_id": "557344464779-k06dc0vdos8rqafhoo2jpr0rigfni0tc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA2mhPFV6tqcw0EWxC2P9d0LTbr8LV2QhQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "557344464779-k06dc0vdos8rqafhoo2jpr0rigfni0tc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

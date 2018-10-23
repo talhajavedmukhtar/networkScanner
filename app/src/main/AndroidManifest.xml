@@ -25,7 +25,8 @@
         </activity>
         <activity android:name=".SummaryActivity" />
         <activity android:name=".PortScanActivity" />
-        <activity android:name=".BannerGrabActivity"></activity>
+        <activity android:name=".BannerGrabActivity" />
+        <activity android:name=".VulnerabilitiesActivity"></activity>
     </application>
 
 </manifest>

@@ -37,7 +37,7 @@ public class SummaryActivity extends AppCompatActivity implements PScanParameter
     private Button closeButton;
     private Button saveButton;
     private Button portScanButton;
-    private Button bannerGrabButton;
+    private Button vulnerabilitiesFindButton;
 
     private int timeout;
     private int noOfThreads;
@@ -216,8 +216,8 @@ public class SummaryActivity extends AppCompatActivity implements PScanParameter
             }
         });
 
-        bannerGrabButton = (Button) findViewById(R.id.bannerGrab);
-        bannerGrabButton.setOnClickListener(new View.OnClickListener() {
+        vulnerabilitiesFindButton = (Button) findViewById(R.id.vulnerabilitiesFind);
+        vulnerabilitiesFindButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 /*for (Host h: discoveredHosts) {
@@ -237,7 +237,7 @@ public class SummaryActivity extends AppCompatActivity implements PScanParameter
                     }
                 }
 
-                Intent intent = new Intent(getBaseContext(), BannerGrabActivity.class);
+                Intent intent = new Intent(getBaseContext(), VulnerabilitiesActivity.class);
                 intent.putExtra("selectedIps",selectedIps);
                 startActivity(intent);
             }
