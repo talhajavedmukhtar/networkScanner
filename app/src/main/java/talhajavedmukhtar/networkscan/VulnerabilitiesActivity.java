@@ -251,10 +251,6 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
 
             MyApp app = (MyApp) getApplication();
 
-            while(!app.isFinderReady()){
-                //we play the waiting game
-            }
-
             vulnerabilityFinder = app.getFinder();
 
             i = 0;
@@ -267,7 +263,7 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
                     String product = t.getProduct();
                     String version = t.getVersion();
 
-                    ArrayList<String> vulns = vulnerabilityFinder.getVulnerabilities(product,version);
+                    ArrayList<String> vulns = vulnerabilityFinder.getIdents(product,version);
 
                     for (String vuln: vulns){
                         if(!allVulnerabilities.contains(vuln)){

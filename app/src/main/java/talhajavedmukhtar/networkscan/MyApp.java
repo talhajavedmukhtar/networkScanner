@@ -9,7 +9,7 @@ import android.os.AsyncTask;
 
 public class MyApp extends Application {
     public static MacToVendorMap map;
-    public static VulnerabilityFinder vulnerabilityFinder;
+    public VulnerabilityFinder vulnerabilityFinder;
 
     AsyncTask initTask = new AsyncTask() {
         @Override
@@ -19,20 +19,8 @@ public class MyApp extends Application {
         }
     };
 
-    AsyncTask initFinder = (new AsyncTask(){
-        @Override
-        protected Object doInBackground(Object[] objects) {
-            vulnerabilityFinder = new VulnerabilityFinder(getApplicationContext());
-            return null;
-        }
-    });
-
     public Boolean isMapReady(){
         return initTask.getStatus() == AsyncTask.Status.FINISHED;
-    }
-
-    public Boolean isFinderReady(){
-        return initFinder.getStatus() == AsyncTask.Status.FINISHED;
     }
 
     public MacToVendorMap getMap(){
@@ -40,6 +28,9 @@ public class MyApp extends Application {
     }
 
     public VulnerabilityFinder getFinder(){
+        if (vulnerabilityFinder == null){
+            vulnerabilityFinder = new VulnerabilityFinder(getApplicationContext());
+        }
         return vulnerabilityFinder;
     }
 

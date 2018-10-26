@@ -154,7 +154,8 @@ public class MainActivity extends AppCompatActivity {
 
         applicationData = (MyApp) getApplication();
         applicationData.initTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-        applicationData.initFinder.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        //applicationData.initFinder.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
     }
 
 
