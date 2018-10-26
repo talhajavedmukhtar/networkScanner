@@ -7,30 +7,6 @@ import java.util.ArrayList;
  */
 
 public class BannerGrabber {
-    public class Banner{
-        String ip;
-        String protocol;
-        String banner;
-
-        Banner(String i, String p, String b){
-            ip = i;
-            protocol = p;
-            banner = b;
-        }
-
-        public String getIp(){
-            return ip;
-        }
-
-        public String getProtocol(){
-            return protocol;
-        }
-
-        public String getBanner(){
-            return banner;
-        }
-    }
-
     private SSHBannerGrabber sshBannerGrabber;
     private HTTPBannerGrabber httpBannerGrabber;
 

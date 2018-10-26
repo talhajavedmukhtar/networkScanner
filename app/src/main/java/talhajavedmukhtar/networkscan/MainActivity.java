@@ -18,7 +18,12 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
+import org.slf4j.helpers.Util;
+
 import java.util.ArrayList;
+
+import talhajavedmukhtar.networkscan.BannerGrabbers.Banner;
+import talhajavedmukhtar.networkscan.BannerGrabbers.BannerGrabber;
 
 public class MainActivity extends AppCompatActivity {
     final String TAG = Tags.makeTag("Main");

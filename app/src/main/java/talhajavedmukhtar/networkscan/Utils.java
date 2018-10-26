@@ -1,8 +1,11 @@
 package talhajavedmukhtar.networkscan;
 
+import android.util.Log;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import talhajavedmukhtar.networkscan.BannerGrabbers.Banner;
 import talhajavedmukhtar.networkscan.BannerGrabbers.BannerGrabber;
 
 /**
@@ -10,8 +13,9 @@ import talhajavedmukhtar.networkscan.BannerGrabbers.BannerGrabber;
  */
 
 public class Utils {
+    private static final String TAG = Tags.makeTag("Utils");
 
-    public static String getProductFromBanner(BannerGrabber.Banner b){
+    public static String getProductFromBanner(Banner b){
         String protocol = b.getProtocol();
         String banner = b.getBanner();
 
@@ -26,7 +30,7 @@ public class Utils {
         return null;
     }
 
-    public static String getVersionFromBanner(BannerGrabber.Banner b){
+    public static String getVersionFromBanner(Banner b){
         String protocol = b.getProtocol();
         String banner = b.getBanner();
 
@@ -45,17 +49,30 @@ public class Utils {
     private static String extractSSHProduct(String banner){
         String product = banner.split("\n")[0];
 
+        Log.d(TAG,"Doing regex on: "+product);
+
         //remove SSH-x.x
-        product = product.replace("(SSH-\\d+(\\.\\d+)?-)","");
+        product = product.replaceAll("(SSH-\\d+(\\.\\d+)?-)","");
+
+        Log.d(TAG,"Doing regex on: "+product);
 
         //remove version
-        product = product.replace("(v\\s?)?\\d+(\\.\\d+)*","");
+        product = product.replaceAll("(v\\s?)?\\d+(\\.\\d+)*","");
 
         //remove ending underscores or hyphens
-        product = product.replace("(_|-)+$","");
+        product = product.replaceAll("(_|-)+$","");
 
         //replace in between underscores or hypens with space
-        product = product.replace("(_|-)"," ");
+        product = product.replaceAll("(_|-)"," ");
+
+        product = product.toLowerCase();
+
+        if(product.trim().equals("dropbear")){
+            Log.d(TAG,"This equaled dropbear: "+ product);
+            return "dropbear_ssh";
+        }else{
+            Log.d(TAG,"This did not equal dropbear: "+ product);
+        }
 
         return product;
     }
@@ -64,14 +81,16 @@ public class Utils {
         String product = banner.split("\n")[0];
 
         //remove SSH-x.x
-        product = product.replace("(SSH-\\d+(\\.\\d+)?-)","");
+        product = product.replaceAll("(SSH-\\d+(\\.\\d+)?-)","");
 
         Pattern p = Pattern.compile("(v\\s?)?\\d+(\\.\\d+)*");
 
         Matcher m = p.matcher(product);
 
         if (m.find()){
-            return m.group(0);
+            String version = m.group(0);
+
+            return version;
         }else{
             return "*";
         }
@@ -88,10 +107,10 @@ public class Utils {
             product = product.split("\\s\\(")[0];
 
             //remove version identifiers
-            product = product.replace("/?\\d+(\\.\\d+)?","");
+            product = product.replaceAll("/?\\d+(\\.\\d+)?","");
 
             //remove ending space
-            product = product.replace("\\s+$","");
+            product = product.replaceAll("\\s+$","");
 
             return product;
         }else{

@@ -20,6 +20,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import talhajavedmukhtar.networkscan.BannerGrabbers.Banner;
 import talhajavedmukhtar.networkscan.BannerGrabbers.BannerGrabHelper;
 import talhajavedmukhtar.networkscan.BannerGrabbers.BannerGrabber;
 
@@ -43,17 +44,24 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
 
     private class Target {
         private String type;
+        private String banner;
         private String product;
         private String version;
 
-        Target(String t, String p, String v){
+        Target(String t, String b, String p, String v){
             type = t;
+            banner = b;
             product = p;
             version = v;
         }
 
+
         private String getType(){
             return type;
+        }
+
+        private String getBanner(){
+            return banner;
         }
 
         private String getProduct(){
@@ -69,34 +77,29 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
         private String ip;
         private ArrayList<Target> targetsFound;
         private ArrayList<String> vulnerabilitiesFound;
+        private ArrayList<String> vulnerabilityDescriptions;
 
-        public FoundDetails(String ip, ArrayList<Target> targetsFound, ArrayList<String> vulnerabilitiesFound) {
+        public FoundDetails(String ip, ArrayList<Target> targetsFound, ArrayList<String> vulnerabilitiesFound, ArrayList<String> vulnerabilityDescriptions) {
             this.ip = ip;
             this.targetsFound = targetsFound;
             this.vulnerabilitiesFound = vulnerabilitiesFound;
+            this.vulnerabilityDescriptions = vulnerabilityDescriptions;
         }
 
         public String getIp() {
             return ip;
         }
 
-        public ArrayList<Target> getTargetsFound() {
-            return targetsFound;
-        }
-
-        public ArrayList<String> getVulnerabilitiesFound() {
-            return vulnerabilitiesFound;
-        }
-
         public String toString(){
             String message = ip + "\n";
             message += "****************\n";
             for(Target t: targetsFound){
-                message += "type: "+t.getType() + ", product: " + t.getProduct() + ", version: " + t.getVersion() + "\n";
+                message += "type: "+t.getType() + ", \nbanner: " + t.getBanner() + ", \nproduct: "
+                        + t.getProduct() + ", \nversion: " + t.getVersion() + "\n";
             }
             message += "****************\n";
-            for(String vuln: vulnerabilitiesFound){
-                message += vuln + "\n";
+            for(int i = 0; i < vulnerabilitiesFound.size(); i++){
+                message += vulnerabilitiesFound.get(i) + " : " + vulnerabilityDescriptions.get(i) + "\n";
             }
             return message;
         }
@@ -218,16 +221,16 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
             int done = 0;
             for(String ip: ipList){
                 BannerGrabber bannerGrabber = new BannerGrabber();
-                ArrayList<BannerGrabber.Banner> banners = bannerGrabber.grab(ip,10000,10);
+                ArrayList<Banner> banners = bannerGrabber.grab(ip,10000,10);
 
                 ArrayList<Target> targets = new ArrayList<>();
                 if (banners.size() != 0){
-                    for(BannerGrabber.Banner b: banners){
+                    for(Banner b: banners){
                         String product = Utils.getProductFromBanner(b);
                         String version = Utils.getVersionFromBanner(b);
 
                         if(product != null){
-                            targets.add(new Target(b.getProtocol(),product,version));
+                            targets.add(new Target(b.getProtocol(),b.getBanner(),product,version));
                         }
                     }
                 }
@@ -258,6 +261,7 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
             for(String ip: savedTargets.keySet()){
                 ArrayList<Target> targets = savedTargets.get(ip);
                 ArrayList<String> allVulnerabilities = new ArrayList<>();
+                ArrayList<String> vulnerabilityDescs = new ArrayList<>();
 
                 for(Target t: targets){
                     String product = t.getProduct();
@@ -268,6 +272,9 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
                     for (String vuln: vulns){
                         if(!allVulnerabilities.contains(vuln)){
                             allVulnerabilities.add(vuln);
+
+                            String description = vulnerabilityFinder.getCVEDescription(vuln);
+                            vulnerabilityDescs.add(description);
                         }
                     }
                 }
@@ -279,7 +286,7 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
                         + Integer.toString(allVulnerabilities.size()) + " vulnerabilities found";
 
                 messagesList.add(message);
-                details.add(new FoundDetails(ip,targets,allVulnerabilities));
+                details.add(new FoundDetails(ip,targets,allVulnerabilities,vulnerabilityDescs));
                 runOnUI(new Runnable() {
                     @Override
                     public void run() {
@@ -290,10 +297,10 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
                 i += 1;
                 int newProgress = (int) ((progressBar.getMax()/2) + (i * progressBar.getMax())/(2*ipList.size()));
                 progressBar.setProgress(newProgress);
-            }
 
-            done += 1;
-            updateIPsDone(done);
+                done += 1;
+                updateIPsDone(done);
+            }
 
             if(messagesList.size() == 0){
                 messagesList.add("Nothing Found");

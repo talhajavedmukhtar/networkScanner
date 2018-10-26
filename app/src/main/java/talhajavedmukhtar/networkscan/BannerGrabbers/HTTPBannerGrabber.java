@@ -55,7 +55,7 @@ public class HTTPBannerGrabber {
         try {
             banner = f.get(grabTimeout, TimeUnit.SECONDS);
         } catch (Exception e) {
-            Log.d(TAG,e.getMessage());
+            //Log.d(TAG,e.getMessage());
             banner = "";
         }
 
