@@ -1,7 +1,9 @@
 package talhajavedmukhtar.networkscan;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.nfc.Tag;
 import android.os.AsyncTask;
 import android.os.Handler;
@@ -17,6 +19,10 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -61,7 +67,11 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
         }
 
         private String getBanner(){
-            return banner;
+            if(banner.length() > 300) {
+                return banner.substring(0, 300) + "......";
+            }else{
+                return banner;
+            }
         }
 
         private String getProduct(){
@@ -76,14 +86,16 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
     private class FoundDetails{
         private String ip;
         private ArrayList<Target> targetsFound;
-        private ArrayList<String> vulnerabilitiesFound;
-        private ArrayList<String> vulnerabilityDescriptions;
+        //private ArrayList<String> vulnerabilitiesFound;
+        //private ArrayList<String> vulnerabilityDescriptions;
+        private HashMap<String,String> vulnerabilities;
 
-        public FoundDetails(String ip, ArrayList<Target> targetsFound, ArrayList<String> vulnerabilitiesFound, ArrayList<String> vulnerabilityDescriptions) {
+        public FoundDetails(String ip, ArrayList<Target> targetsFound, HashMap<String,String> vulns) {
             this.ip = ip;
             this.targetsFound = targetsFound;
-            this.vulnerabilitiesFound = vulnerabilitiesFound;
-            this.vulnerabilityDescriptions = vulnerabilityDescriptions;
+            //this.vulnerabilitiesFound = vulnerabilitiesFound;
+            //this.vulnerabilityDescriptions = vulnerabilityDescriptions;
+            this.vulnerabilities = vulns;
         }
 
         public String getIp() {
@@ -93,14 +105,22 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
         public String toString(){
             String message = ip + "\n";
             message += "****************\n";
+            message += "Targets:\n";
             for(Target t: targetsFound){
+                message += "*******\n";
                 message += "type: "+t.getType() + ", \nbanner: " + t.getBanner() + ", \nproduct: "
                         + t.getProduct() + ", \nversion: " + t.getVersion() + "\n";
+                message += "*******\n";
             }
             message += "****************\n";
-            for(int i = 0; i < vulnerabilitiesFound.size(); i++){
-                message += vulnerabilitiesFound.get(i) + " : " + vulnerabilityDescriptions.get(i) + "\n";
+            message += "Vulnerabilities:\n";
+            for(String ident: vulnerabilities.keySet()){
+                message += ident + " : " + vulnerabilities.get(ident) + "\n";
             }
+            /*for(int i = 0; i < vulnerabilitiesFound.size(); i++){
+                message += vulnerabilitiesFound.get(i) + " : " + vulnerabilityDescriptions.get(i) + "\n";
+            }*/
+            message += "****************\n";
             return message;
         }
     }
@@ -212,16 +232,88 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
             savedTargets = new HashMap<>();
         }
 
+        //this messes up the architecture; needs to be handled
+        private HashMap<String,String> getUPNPBanners(int timeout){
+            HashMap<String,String> ipToBanner = new HashMap<>();
+
+            String DEFAULT_IP = "239.255.255.250";
+            int DEFAULT_PORT = 1900;
+            String DISCOVERY_QUERY = "M-SEARCH * HTTP/1.1" + "\r\n" +
+                    "HOST: 239.255.255.250:1900" + "\r\n" +
+                    "MAN: \"ssdp:discover\"" + "\r\n" +
+                    "MX: 1"+ "\r\n" +
+                    "ST: ssdp:all" + "\r\n" + // Use this for all UPnP Devices
+                    "\r\n";
+
+            Log.d(TAG,"Waiting for UPnP");
+            WifiManager wifi = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            if(wifi != null) {
+                WifiManager.MulticastLock lock = wifi.createMulticastLock("The Lock");
+                lock.acquire();
+                DatagramSocket socket = null;
+                try {
+                    InetAddress group = InetAddress.getByName(DEFAULT_IP);
+
+                    socket = new DatagramSocket(null); // <-- create an unbound socket first
+                    socket.setReuseAddress(true);
+                    socket.setSoTimeout(timeout);
+                    socket.bind(new InetSocketAddress(DEFAULT_PORT)); // <-- now bind it
+
+
+                    DatagramPacket datagramPacketRequest = new DatagramPacket(DISCOVERY_QUERY.getBytes(), DISCOVERY_QUERY.length(), group, DEFAULT_PORT);
+                    socket.send(datagramPacketRequest);
+
+                    long time = System.currentTimeMillis();
+                    long curTime = System.currentTimeMillis();
+
+                    while (curTime - time < timeout) {
+                        DatagramPacket datagramPacket = new DatagramPacket(new byte[1024], 1024);
+                        socket.receive(datagramPacket);
+                        String response = new String(datagramPacket.getData(), 0, datagramPacket.getLength());
+                        Log.d(TAG,response);
+                        if (response.substring(0, 12).toUpperCase().equals("HTTP/1.1 200")) {
+                            String ip = datagramPacket.getAddress().getHostAddress();
+                            ipToBanner.put(ip,response);
+                            Log.d(TAG,"Putting >"+ip+" :"+response);
+                        }
+
+                        curTime = System.currentTimeMillis();
+                        Log.d(TAG,"Difference is: " + Long.toString(curTime-time));
+                    }
+
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                    Log.d(TAG,e.toString() + " : " + e.getMessage());
+                } finally {
+                    if (socket != null) {
+                        socket.close();
+                    }
+                    Log.d(TAG,"done");
+                }
+                lock.release();
+
+            }
+
+            return ipToBanner;
+        }
+
 
         @Override
         protected Object doInBackground(Object[] objects) {
             progressBar.setProgress(progressBar.getMax()/40);
+
+            HashMap<String,String> upnpBanners = getUPNPBanners(10000 /*milliseconds*/);
 
             int i = 0;
             int done = 0;
             for(String ip: ipList){
                 BannerGrabber bannerGrabber = new BannerGrabber();
                 ArrayList<Banner> banners = bannerGrabber.grab(ip,10000,10);
+
+                if(upnpBanners.containsKey(ip)){
+                    Log.d(TAG,"Putting a UPNP banner for "+ip);
+                    banners.add(new Banner(ip,"upnp",upnpBanners.get(ip)));
+                }
 
                 ArrayList<Target> targets = new ArrayList<>();
                 if (banners.size() != 0){
@@ -231,6 +323,8 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
 
                         if(product != null){
                             targets.add(new Target(b.getProtocol(),b.getBanner(),product,version));
+                        }else{
+                            targets.add(new Target(b.getProtocol(),b.getBanner(),"",version));
                         }
                     }
                 }
@@ -257,7 +351,7 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
             for(String ip: savedTargets.keySet()){
                 ArrayList<Target> targets = savedTargets.get(ip);
                 ArrayList<String> allVulnerabilities = new ArrayList<>();
-                ArrayList<String> vulnerabilityDescs = new ArrayList<>();
+                //ArrayList<String> vulnerabilityDescs = new ArrayList<>();
 
                 for(Target t: targets){
                     String product = t.getProduct();
@@ -269,11 +363,14 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
                         if(!allVulnerabilities.contains(vuln)){
                             allVulnerabilities.add(vuln);
 
-                            String description = vulnerabilityFinder.getCVEDescription(vuln);
-                            vulnerabilityDescs.add(description);
+                            //String description = vulnerabilityFinder.getCVEDescription(vuln);
+                            //Log.d(TAG,"a vulnerability found!");
+                            //vulnerabilityDescs.add(description);
                         }
                     }
                 }
+
+                HashMap<String,String> vulnerabilityDescs = vulnerabilityFinder.getCVEDescriptions(allVulnerabilities);
 
                 //For this ip,
                 //update messages view to show 1)how many targets found 2)how many vulns found
@@ -282,7 +379,7 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
                         + Integer.toString(allVulnerabilities.size()) + " vulnerabilities found";
 
                 messagesList.add(message);
-                details.add(new FoundDetails(ip,targets,allVulnerabilities,vulnerabilityDescs));
+                details.add(new FoundDetails(ip,targets,vulnerabilityDescs));
                 runOnUI(new Runnable() {
                     @Override
                     public void run() {
@@ -318,6 +415,5 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
             }
         },100);
     }
-
 
 }

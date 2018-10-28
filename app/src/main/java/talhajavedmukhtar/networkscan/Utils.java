@@ -31,6 +31,10 @@ public class Utils {
             return extractHTTPProduct(banner);
         }
 
+        if(protocol.equals("upnp")){
+            return extractUPNPProduct(banner);
+        }
+
         return null;
     }
 
@@ -44,6 +48,10 @@ public class Utils {
 
         if(protocol.equals("http")){
             return extractHTTPVersion(banner);
+        }
+
+        if(protocol.equals("upnp")){
+            return extractUPNPVersion(banner);
         }
 
         return null;
@@ -102,7 +110,7 @@ public class Utils {
 
     //HTTP
     private static String extractHTTPProduct(String banner){
-        Pattern p = Pattern.compile("Server:\\s.*");
+        Pattern p = Pattern.compile("(Server:)|(SERVER:)\\s.*");
 
         Matcher m = p.matcher(banner);
 
@@ -123,7 +131,7 @@ public class Utils {
     }
 
     private static String extractHTTPVersion(String banner){
-        Pattern p = Pattern.compile("Server:\\s.*");
+        Pattern p = Pattern.compile("(Server:)|(SERVER:)\\s.*");
 
         Matcher m = p.matcher(banner);
 
@@ -149,6 +157,46 @@ public class Utils {
             }else{
                 return "*";
             }
+        }else{
+            return null;
+        }
+    }
+
+    private static String extractUPNPProduct(String banner){
+        Pattern p = Pattern.compile("(Server:)|(SERVER:)\\s.*");
+
+        Matcher m = p.matcher(banner);
+
+        if (m.find()){
+            String product = m.group(0);
+            product = product.substring(8);
+            product = product.split("(, )|(\\s)")[0];
+
+            //remove version identifiers
+            product = product.split("/")[0];
+
+            if (product.toLowerCase().equals("linux")){
+                return "linux_kernel";
+            }else{
+                return product;
+            }
+        }else{
+            return null;
+        }
+    }
+
+    private static String extractUPNPVersion(String banner){
+        Pattern p = Pattern.compile("(Server:)|(SERVER:)\\s.*");
+
+        Matcher m = p.matcher(banner);
+
+        if (m.find()){
+            String product = m.group(0);
+            product = product.split("(, )|(\\s)")[0];
+
+            String version =  product.split("/")[1];
+
+            return version.split("_")[0];
         }else{
             return null;
         }
