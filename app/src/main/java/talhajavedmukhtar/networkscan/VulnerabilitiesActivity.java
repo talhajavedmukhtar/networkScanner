@@ -114,6 +114,9 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
             }
             message += "****************\n";
             message += "Vulnerabilities:\n";
+            if(vulnerabilities.size()==0){
+                message += "None\n";
+            }
             for(String ident: vulnerabilities.keySet()){
                 message += ident + " : " + vulnerabilities.get(ident) + "\n";
             }
@@ -321,11 +324,11 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
                         String product = Utils.getProductFromBanner(b);
                         String version = Utils.getVersionFromBanner(b);
 
-                        if(product != null){
+                        if((product != null)&&(!product.equals(""))){
                             targets.add(new Target(b.getProtocol(),b.getBanner(),product,version));
-                        }else{
+                        }/*else{
                             targets.add(new Target(b.getProtocol(),b.getBanner(),"",version));
-                        }
+                        }*/
                     }
                 }
 
@@ -376,7 +379,7 @@ public class VulnerabilitiesActivity extends AppCompatActivity {
                 //update messages view to show 1)how many targets found 2)how many vulns found
 
                 String message = ip + " : " + Integer.toString(targets.size()) + " targets found, "
-                        + Integer.toString(allVulnerabilities.size()) + " vulnerabilities found";
+                        + Integer.toString(vulnerabilityDescs.size()) + " vulnerabilities found";
 
                 messagesList.add(message);
                 details.add(new FoundDetails(ip,targets,vulnerabilityDescs));
